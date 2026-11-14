@@ -993,7 +993,14 @@ async function punchTree(tree) {
              if (player.x > tree.x || (player.y + 16) < tree.y) {
                 player.punching = true;
                 player.punchStartedAt = performance.now();
-                runPunchTreeAnimation = true;
+                runPunchTreeAnimationLeft = true;
+            }
+        }
+        else (player.facing === "down" && player.forwardSide === "right" || player.facing === "right") {    
+             if (player.x < tree.x || (player.y + 16) < tree.y) {
+                player.punching = true;
+                player.punchStartedAt = performance.now();
+                runPunchTreeAnimationRight = true;
             }
         }
     }
@@ -1369,7 +1376,7 @@ function update(dt) {
     if (player.punching) {
         player.moving = false;
         return;
-    }
+    }            
         
     const inputX =
         Number(
