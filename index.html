@@ -992,50 +992,57 @@ let runPunchTreeAnimationRight = false;
 let runPunchTreeAnimationLeft = false;
 
     
+
 async function punchTree(tree) {
-    if (tree.punching === false) {
-        if (player.facing === "down" && player.forwardSide === "left" || player.facing === "left") {    
-             if (player.x > tree.x || (player.y + 16) < tree.y) {
-                player.punching = true;
-                player.punchStartedAt = performance.now();
-                runPunchTreeAnimationLeft = true;
-            }
-        }
-        else (player.facing === "down" && player.forwardSide === "right" || player.facing === "right") {    
-             if (player.x < tree.x || (player.y + 16) < tree.y) {
-                player.punching = true;
-                player.punchStartedAt = performance.now();
-                runPunchTreeAnimationRight = true;
-            }
-        }
+    if (!tree || tree.punching || player.punching) return;
+
+    let punchRight = false;
+
+    if (player.facing === "down") {
+        punchRight = player.forwardSide === "right";
+    } else if (player.facing === "right") {
+        punchRight = true;
+    } else if (player.facing === "left") {
+        punchRight = false;
+    } else if (player.facing === "up") {
+        punchRight = player.x < tree.x;
     }
 
-    if (runPunchTreeAnimation === true) { 
-        runPunchTreeAnimation = false;
-        await sleep(300);
-        
-        if (!tree || tree.punching) return;
-    
-        if (!treePunchFrames.every(imageReady)) return;
-    
-        let flip = false;
-    
-        if (player.facing === "up") {
-            flip = true;
-        } else if (player.facing !== "down") {
-            flip = player.x < tree.x;
-        }
-    
-        tree.punching = true;
-    
-        tree.animation = {
-            startedAt: performance.now(),
-            flip
-        };
+    if (punchRight) {
+        if (player.x > tree.x && player.facing !== "up") return;
+    } else {
+        if (player.x < tree.x && player.facing !== "up") return;
+    }
 
-        
-    } 
+    player.punching = true;
+    player.punchStartedAt = performance.now();
+
+    runPunchTreeAnimationRight = punchRight;
+    runPunchTreeAnimationLeft = !punchRight;
+
+    const flip = player.facing === "up"
+        ? true
+        : player.facing === "down"
+            ? false
+            : player.x < tree.x;
+
+    await sleep(300);
+
+    if (!tree || tree.punching) return;
+
+    if (!treePunchFrames.every(imageReady)) return;
+
+    tree.punching = true;
+
+    tree.animation = {
+        startedAt: performance.now(),
+        flip
+    };
+
+    runPunchTreeAnimationRight = false;
+    runPunchTreeAnimationLeft = false;
 }
+
     
 // find nearest tree
 function getNearestTree() {
