@@ -278,8 +278,12 @@ const INVENTORY_SLOTS = 24;
 const SAVE_KEY = "pixelPetGame.inventory.v2";
 const LEGACY_SAVE_KEY = "pixelPetGame.eggsAndInventory.v1";
 
-const malePunching = loadImage(
+const malePunchingLeft = loadImage(
     "characters/male/male-punching.png"
+);
+
+const malePunchingRight = loadImage(
+    "characters/male/male-punching-right.png"
 );
 
 
@@ -984,8 +988,9 @@ function isTreeSolid(x, y) {
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-let runPunchTreeAnimation = false;
-    
+let runPunchTreeAnimationRight = false;
+let runPunchTreeAnimationLeft = false;
+
     
 async function punchTree(tree) {
     if (tree.punching === false) {
@@ -1300,28 +1305,36 @@ function drawPlayer(screenX, screenY) {
     const shadowHeight = 4;
     const shadowOpacity = 0.22;
 
+    
     if (player.punching) {
         freezePlayer = true;
-        const elapsed = performance.now() - player.punchStartedAt;
     
+        const elapsed = performance.now() - player.punchStartedAt;
         const frame = Math.floor(elapsed / 50);
     
-        if (frame < 10 && imageReady(malePunching)) {
-            ctx.drawImage(
-                malePunching,
-                frame * 16, 0,
-                16, 16,
-                px, py,
-                PLAYER_SPRITE_SIZE,
+        const punchRight =
+            player.facing === "right" ||
+            (player.facing === "down" && player.forwardSide === "right");
+    
+        const punchSprite = punchRight
+            ? malePunchingRight
+            : malePunchingLeft;
+    
+        if (frame < 10 && imageReady(punchSprite)) {
+            drawPlayerSpriteFrame(
+                punchSprite,
+                frame,
+                px,
+                py,
                 PLAYER_SPRITE_SIZE
             );
-    
             return;
         }
     
         player.punching = false;
         freezePlayer = false;
     }
+
     
         if (player.shadow) {
             ctx.save();
