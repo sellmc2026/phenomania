@@ -993,6 +993,7 @@ let runPunchTreeAnimationLeft = false;
 
     
 
+
 async function punchTree(tree) {
     if (!tree || tree.punching || player.punching) return;
 
@@ -1008,17 +1009,8 @@ async function punchTree(tree) {
         punchRight = player.x < tree.x;
     }
 
-    if (punchRight) {
-        if (player.x > tree.x && player.facing !== "up") return;
-    } else {
-        if (player.x < tree.x && player.facing !== "up") return;
-    }
-
     player.punching = true;
     player.punchStartedAt = performance.now();
-
-    runPunchTreeAnimationRight = punchRight;
-    runPunchTreeAnimationLeft = !punchRight;
 
     const flip = player.facing === "up"
         ? true
@@ -1029,7 +1021,6 @@ async function punchTree(tree) {
     await sleep(300);
 
     if (!tree || tree.punching) return;
-
     if (!treePunchFrames.every(imageReady)) return;
 
     tree.punching = true;
@@ -1038,10 +1029,8 @@ async function punchTree(tree) {
         startedAt: performance.now(),
         flip
     };
-
-    runPunchTreeAnimationRight = false;
-    runPunchTreeAnimationLeft = false;
 }
+
 
     
 // find nearest tree
