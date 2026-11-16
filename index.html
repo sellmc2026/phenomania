@@ -53,7 +53,7 @@ canvas {
 
 .prompt-area {
     position: fixed;
-    bottom: 22px;
+    bottom: calc(var(--hotbar-size) + 27px);
     left: 0;
     right: 0;
     display: flex;
@@ -80,30 +80,92 @@ canvas {
     z-index: 30;
 }
 
+/* hotbar */
+:root {
+    --hotbar-size: clamp(28px, 5.2vw, 48px);
+}
+
+.hotbar {
+    position: fixed;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(9, var(--hotbar-size));
+    gap: 3px;
+    padding: 4px;
+    background: rgba(40, 23, 55, 0.70);
+    border: 2px solid #79618b;
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 rgba(23, 13, 32, 0.65);
+}
+
+.hotbar-slot {
+    width: var(--hotbar-size);
+    height: var(--hotbar-size);
+    position: relative;
+    border: 0;
+    padding: 0;
+    background: #4f3565 url("hotbar-slot-unselected.png") center / 100% 100% no-repeat;
+    image-rendering: pixelated;
+    cursor: pointer;
+}
+
+.hotbar-slot.active {
+    background-image: url("hotbar-slot-selected.png");
+}
+
+.hotbar-slot:focus-visible, .inventory-slot:focus-visible {
+    outline: 2px solid #ffefac;
+    outline-offset: 2px;
+}
+
+.hotbar-slot .item-icon {
+    width: 64%;
+    height: 64%;
+    position: absolute;
+    top: 18%;
+    left: 18%;
+}
+
+.hotbar-number {
+    position: absolute;
+    top: 1px;
+    left: 3px;
+    color: #fff4ce;
+    font-size: 10px;
+    line-height: 1;
+    text-shadow: 1px 1px #392244, -1px -1px #392244;
+    pointer-events: none;
+}
+
+.hotbar-slot .item-quantity { font-size: 12px; }
+
+/* inventory */
 .inventory-screen {
     position: fixed;
     inset: 0;
     z-index: 20;
-    background: rgba(12, 24, 15, 0.70);
+    background: rgba(23, 13, 32, 0.70);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 12px;
 }
 
-[hidden] {
-    display: none !important;
-}
+[hidden] { display: none !important; }
 
 .inventory-panel {
-    width: min(460px, 100%);
+    width: min(560px, 100%);
     max-height: calc(100vh - 24px);
     overflow-y: auto;
     padding: 16px;
-    border: 4px solid #2c332a;
-    background: #e7d9b2;
-    color: #2c332a;
-    box-shadow: 6px 6px 0 #101d13;
+    border: 4px solid #674d80;
+    border-radius: 16px 6px 16px 6px;
+    background: #d9c6ec;
+    color: #352443;
+    box-shadow: 6px 6px 0 #24162f, inset 0 0 0 2px #f4eaff;
 }
 
 .inventory-heading {
@@ -112,9 +174,11 @@ canvas {
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
-    margin-bottom: 14px;
-    background: #667b57;
-    color: #fff9e5;
+    margin-bottom: 11px;
+    border-radius: 8px 3px 8px 3px;
+    background: #604474;
+    border-bottom: 3px solid #8e729d;
+    color: #fff5dd;
     font-size: 19px;
     font-weight: 800;
 }
@@ -125,41 +189,73 @@ canvas {
     white-space: nowrap;
 }
 
+.inventory-section-title {
+    margin: 12px 2px 6px;
+    color: #5d4074;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
 .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 5px;
+    padding: 9px;
+    border: 2px solid #aa91c3;
+    border-radius: 10px;
+    background: #c2a9db;
 }
 
 .inventory-slot {
-    aspect-ratio: 1;
+    position: relative;
     width: 100%;
     min-width: 0;
+    aspect-ratio: 1;
     display: grid;
     place-items: center;
-    position: relative;
-    border: 2px solid #7d7a65;
-    background: #bcb79a;
-    padding: 3px;
+    border: 2px solid #9476b0;
+    border-radius: 7px 3px 7px 3px;
+    background: #f2eafb;
+    padding: 2px;
     cursor: pointer;
-    border-radius: 8px;
+    color: #452d58;
+    touch-action: none;
 }
 
 .inventory-slot:hover {
-    background: #d7d1ac;
+    background: #fff7ff;
+    border-color: #6fa36c;
 }
 
 .inventory-slot.selected {
-    border-color: #9f7626;
-    background: #f2df9b;
+    border-color: #e5bd65;
+    background: #fff2ca;
+    box-shadow: inset 0 0 0 1px #fff;
+}
+
+.inventory-slot.hotbar-equipped {
+    box-shadow: inset 0 -3px 0 #82a576;
+}
+
+.inventory-slot.drag-over {
+    border-color: #4d965b;
+    background: #e4ffe3;
+    outline: 2px dashed #487b48;
 }
 
 .item-icon {
-    width: 80%;
-    height: 80%;
+    width: 76%;
+    height: 76%;
     object-fit: contain;
     image-rendering: pixelated;
     user-select: none;
+    pointer-events: none;
+}
+
+.item-fallback {
+    font-size: 12px;
+    font-weight: 900;
     pointer-events: none;
 }
 
@@ -167,29 +263,74 @@ canvas {
     position: absolute;
     bottom: 1px;
     right: 2px;
-    font-size: 16px;
+    font-size: 13px;
+    font-weight: 900;
     line-height: 1;
     color: #fff;
-    text-shadow:
-        -1px -1px #263120,
-         1px -1px #263120,
-        -1px  1px #263120,
-         1px  1px #263120;
+    pointer-events: none;
+    text-shadow: -1px -1px #34243e, 1px -1px #34243e,
+                  -1px 1px #34243e, 1px 1px #34243e;
 }
 
 .inventory-info {
-    min-height: 43px;
-    margin-top: 13px;
-    padding: 10px 8px 0;
-    border-top: 2px solid #b6a981;
+    min-height: 48px;
+    margin-top: 11px;
+    padding: 9px 8px 0;
+    border-top: 2px solid #b49bc7;
     font-size: 13px;
 }
 
 .inventory-hint {
-    margin-top: 4px;
+    margin-top: 5px;
     font-size: 12px;
-    color: #60614d;
+    color: #685576;
 }
+
+/* right click item menu */
+.item-menu {
+    position: fixed;
+    z-index: 40;
+    width: 218px;
+    padding: 11px;
+    border: 3px solid #674d80;
+    border-radius: 11px 4px 11px 4px;
+    background: #f0e5fa;
+    color: #3b2949;
+    box-shadow: 4px 4px 0 #24162f;
+}
+
+.item-menu-title {
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 5px;
+}
+
+.item-menu-description {
+    font-size: 11px;
+    margin-bottom: 10px;
+    color: #685474;
+}
+
+.item-menu-actions {
+    display: grid;
+    gap: 6px;
+}
+
+.item-menu button {
+    padding: 8px;
+    border: 2px solid #7d638f;
+    border-radius: 6px 2px 6px 2px;
+    background: #ddcbed;
+    color: #3b2949;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.item-menu button:hover { background: #fef4ff; }
+.item-menu button.danger { border-color: #af647b; color: #853448; }
+.item-menu button.confirm { background: #ffe2dd; }
 
 #gameContainer {
     position: fixed;
@@ -205,11 +346,14 @@ canvas {
 }
 
 @media (max-width: 390px) {
-    .inventory-grid { gap: 4px; }
-    .inventory-panel { padding: 11px; }
-    .inventory-heading { font-size: 16px; }
+    .inventory-grid { gap: 3px; padding: 5px; }
+    .inventory-panel { padding: 9px; }
+    .inventory-heading { font-size: 15px; }
     .inventory-heading small { font-size: 10px; }
-    .item-quantity { font-size: 11px; }
+    .inventory-slot { border-width: 1px; }
+    .item-quantity { font-size: 10px; }
+    .hotbar-slot .item-quantity { font-size: 10px; }
+    .hotbar-number { font-size: 8px; }
 }
 </style>
 </head>
@@ -228,13 +372,15 @@ canvas {
 
     <div class="prompt-area">
         <div class="pickup-label" id="pickup-prompt" hidden>
-            <kbd>C</kbd> Pick up Basic Egg
+            <kbd>C</kbd> Pick up <span id="pickup-name">Basic Egg</span>
         </div>
     </div>
 
     <div class="toast-area">
         <div class="toast" id="toast" hidden></div>
     </div>
+
+    <div class="hotbar" id="hotbar" aria-label="Hotbar"></div>
 
     <div class="inventory-screen" id="inventory-screen" hidden>
         <section class="inventory-panel"
@@ -247,18 +393,32 @@ canvas {
                 <small>E / ESC to close</small>
             </div>
 
+            <div class="inventory-section-title">Backpack</div>
             <div class="inventory-grid" id="inventory-grid"></div>
+
+            <div class="inventory-section-title">Hotbar</div>
+            <div class="inventory-grid" id="inventory-hotbar-grid"></div>
 
             <div class="inventory-info">
                 <div id="inventory-description">
                     Select an item to view it.
                 </div>
                 <div class="inventory-hint">
-                    Click one slot, then another to move or stack items.
+                    Drag items to rearrange, or click two slots. Right-click an item for options.
                 </div>
             </div>
 
         </section>
+    </div>
+
+    <div class="item-menu" id="item-menu" role="dialog" aria-label="Item options" hidden>
+        <div class="item-menu-title" id="item-menu-title"></div>
+        <div class="item-menu-description" id="item-menu-description"></div>
+        <div class="item-menu-actions">
+            <button type="button" id="item-menu-drop">Drop stack</button>
+            <button type="button" class="danger" id="item-menu-delete">Delete forever</button>
+            <button type="button" id="item-menu-cancel">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -291,8 +451,10 @@ const TREE_PUNCH_FPS = 16;
 const TREE_PUNCH_FRAME_COUNT = 9;
 const TREE_PUNCH_DURATION = TREE_PUNCH_FRAME_COUNT / TREE_PUNCH_FPS;
 
-const INVENTORY_SLOTS = 24;
-const SAVE_KEY = "pixelPetGame.inventory.v2";
+const HOTBAR_SLOTS = 9;
+const INVENTORY_SLOTS = 36;
+const SAVE_KEY = "pixelPetGame.inventory.v3";
+const PREVIOUS_SAVE_KEY = "pixelPetGame.inventory.v2";
 const LEGACY_SAVE_KEY = "pixelPetGame.eggsAndInventory.v1";
 
 const malePunchingLeft = loadImage(
@@ -374,7 +536,16 @@ const ui = {
     toast: document.getElementById("toast"),
     screen: document.getElementById("inventory-screen"),
     grid: document.getElementById("inventory-grid"),
-    description: document.getElementById("inventory-description")
+    invHotbar: document.getElementById("inventory-hotbar-grid"),
+    hotbar: document.getElementById("hotbar"),
+    pickupName: document.getElementById("pickup-name"),
+    description: document.getElementById("inventory-description"),
+    menu: document.getElementById("item-menu"),
+    menuTitle: document.getElementById("item-menu-title"),
+    menuDescription: document.getElementById("item-menu-description"),
+    menuDrop: document.getElementById("item-menu-drop"),
+    menuDelete: document.getElementById("item-menu-delete"),
+    menuCancel: document.getElementById("item-menu-cancel")
 };
 
 const player = {
@@ -392,9 +563,16 @@ const player = {
 
 const inventory = Array(INVENTORY_SLOTS).fill(null);
 const collectedEggs = new Set();
+const droppedItems = [];
+const itemTextures = new Map();
 
+let nextDropId = 1;
 let inventoryOpen = false;
 let selectedSlot = -1;
+let selectedHotbarSlot = 0;
+let draggedSlot = -1;
+let menuSlot = -1;
+let deleteConfirm = false;
 let gameTime = 0;
 let notificationTime = 0;
 // notifications
@@ -408,7 +586,9 @@ function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
             inventory,
-            collectedEggs: Array.from(collectedEggs)
+            collectedEggs: Array.from(collectedEggs),
+            droppedItems,
+            selectedHotbarSlot
         }));
     } catch (error) {
         console.warn("Unable to save game:", error);
@@ -417,11 +597,17 @@ function saveGame() {
 
 function loadGame() {
     try {
+        let source = SAVE_KEY;
         let raw = localStorage.getItem(SAVE_KEY);
-        const isLegacy = !raw;
 
         if (!raw) {
-            raw = localStorage.getItem(LEGACY_SAVE_KEY);
+            source = PREVIOUS_SAVE_KEY;
+            raw = localStorage.getItem(source);
+        }
+
+        if (!raw) {
+            source = LEGACY_SAVE_KEY;
+            raw = localStorage.getItem(source);
         }
 
         if (!raw) return;
@@ -429,236 +615,393 @@ function loadGame() {
         const data = JSON.parse(raw);
 
         if (Array.isArray(data.inventory)) {
-            for (let i = 0; i < INVENTORY_SLOTS; i++) {
+            for (let i = 0; i < Math.min(INVENTORY_SLOTS, data.inventory.length); i++) {
                 const old = data.inventory[i];
                 if (!old) continue;
 
                 const oldId = old.itemId || old.type;
-                const itemId = oldId === "egg"
-                    ? "basic-egg"
-                    : oldId;
-
-                if (
-                    typeof itemId !== "string" ||
-                    !/^[a-z0-9_-]+$/i.test(itemId)
-                ) continue;
+                const itemId = oldId === "egg" ? "basic-egg" : oldId;
+                if (!validItemId(itemId)) continue;
 
                 const limit = getItemDefinition(itemId).maxStack;
+                if (!Number.isInteger(old.count) || old.count < 1 || old.count > limit) continue;
 
-                if (
-                    !Number.isInteger(old.count) ||
-                    old.count < 1 ||
-                    old.count > limit
-                ) continue;
-
-                inventory[i] = {
-                    itemId,
-                    count: old.count
-                };
+                inventory[i] = { itemId, count: old.count };
             }
         }
 
         if (Array.isArray(data.collectedEggs)) {
             for (const key of data.collectedEggs) {
-                if (typeof key === "string") {
-                    collectedEggs.add(key);
-                }
+                if (typeof key === "string") collectedEggs.add(key);
             }
         }
 
-        if (isLegacy) saveGame();
+        if (Array.isArray(data.droppedItems)) {
+            for (const item of data.droppedItems) {
+                if (!item || !validItemId(item.itemId)) continue;
+                if (!Number.isFinite(item.x) || !Number.isFinite(item.y)) continue;
+                if (!Number.isInteger(item.count) || item.count <= 0) continue;
+                if (!Number.isInteger(item.id) || item.id < 1) continue;
 
+                droppedItems.push({
+                    id: item.id,
+                    itemId: item.itemId,
+                    x: item.x,
+                    y: item.y,
+                    count: item.count
+                });
+                nextDropId = Math.max(nextDropId, item.id + 1);
+            }
+        }
+
+        if (Number.isInteger(data.selectedHotbarSlot)) {
+            selectedHotbarSlot = Math.max(0, Math.min(8, data.selectedHotbarSlot));
+        }
+
+        if (source !== SAVE_KEY) saveGame();
     } catch (error) {
         console.warn("Unable to load saved game:", error);
     }
 }
 
+// items and inventory
+function validItemId(itemId) {
+    return typeof itemId === "string" && /^[a-z0-9_-]+$/i.test(itemId);
+}
 
-// inventory system
-function addInventoryItem(itemId, amount = 1) {
-    if (
-        typeof itemId !== "string" ||
-        !/^[a-z0-9_-]+$/i.test(itemId)
-    ) return false;
-
-    if (!Number.isInteger(amount) || amount <= 0) {
-        return false;
+function getItemTexture(itemId) {
+    if (!itemTextures.has(itemId)) {
+        itemTextures.set(itemId, loadImage(getItemDefinition(itemId).icon));
     }
+    return itemTextures.get(itemId);
+}
+
+function addInventoryItem(itemId, amount = 1) {
+    if (!validItemId(itemId) || !Number.isInteger(amount) || amount <= 0) return false;
 
     const limit = getItemDefinition(itemId).maxStack;
     let capacity = 0;
 
     for (const slot of inventory) {
-        if (!slot) {
-            capacity += limit;
-        } else if (slot.itemId === itemId) {
-            capacity += Math.max(0, limit - slot.count);
-        }
+        if (!slot) capacity += limit;
+        else if (slot.itemId === itemId) capacity += Math.max(0, limit - slot.count);
     }
 
     if (capacity < amount) return false;
 
+    // fill existing stacks first
     for (const slot of inventory) {
-        if (amount === 0) break;
-        if (!slot || slot.itemId !== itemId) continue;
-
+        if (!slot || slot.itemId !== itemId || amount === 0) continue;
         const moved = Math.min(limit - slot.count, amount);
         slot.count += moved;
         amount -= moved;
     }
 
+    // then fill empty slots
     for (let i = 0; i < inventory.length && amount > 0; i++) {
         if (inventory[i]) continue;
-
         const moved = Math.min(limit, amount);
-
-        inventory[i] = {
-            itemId,
-            count: moved
-        };
-
+        inventory[i] = { itemId, count: moved };
         amount -= moved;
     }
 
     saveGame();
     renderInventory();
-
+    renderHotbar();
     return true;
 }
 
 function moveInventoryItem(from, to) {
+    if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+    if (from < 0 || to < 0 || from >= INVENTORY_SLOTS || to >= INVENTORY_SLOTS) return;
     if (from === to || !inventory[from]) return;
 
     const first = inventory[from];
     const second = inventory[to];
 
     if (second && second.itemId === first.itemId) {
-        const maxStack = getItemDefinition(first.itemId).maxStack;
-
-        const transfer = Math.min(
-            maxStack - second.count,
-            first.count
-        );
-
-        second.count += transfer;
-        first.count -= transfer;
-
-        if (first.count === 0) {
-            inventory[from] = null;
-        }
+        const limit = getItemDefinition(first.itemId).maxStack;
+        const moved = Math.max(0, Math.min(limit - second.count, first.count));
+        second.count += moved;
+        first.count -= moved;
+        if (first.count <= 0) inventory[from] = null;
     } else {
         inventory[from] = second;
         inventory[to] = first;
     }
 
     saveGame();
+    renderInventory();
+    renderHotbar();
+}
+
+function selectHotbarSlot(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= HOTBAR_SLOTS) return;
+    selectedHotbarSlot = index;
+    saveGame();
+    renderHotbar();
+    if (inventoryOpen) renderInventory();
+}
+
+function getHeldItem() {
+    return inventory[selectedHotbarSlot];
 }
 
 function clickInventorySlot(index) {
+    closeItemMenu();
+
     if (selectedSlot === -1) {
-        if (inventory[index]) {
-            selectedSlot = index;
-        }
+        if (inventory[index]) selectedSlot = index;
     } else if (selectedSlot === index) {
         selectedSlot = -1;
     } else {
-        moveInventoryItem(selectedSlot, index);
+        const from = selectedSlot;
         selectedSlot = -1;
+        moveInventoryItem(from, index);
     }
 
     renderInventory();
 }
 
-function renderInventory() {
-    const fragment = document.createDocumentFragment();
+function createItemIcon(itemId) {
+    const def = getItemDefinition(itemId);
+    const icon = document.createElement("img");
+    icon.className = "item-icon";
+    icon.src = def.icon;
+    icon.alt = "";
+    icon.draggable = false;
 
-    for (let i = 0; i < INVENTORY_SLOTS; i++) {
-        const button = document.createElement("button");
+    icon.addEventListener("error", () => {
+        const fallback = document.createElement("span");
+        fallback.className = "item-fallback";
+        fallback.textContent = def.name.slice(0, 2).toUpperCase();
+        icon.replaceWith(fallback);
+    }, { once: true });
 
-        button.className = "inventory-slot" +
-            (selectedSlot === i ? " selected" : "");
+    return icon;
+}
 
-        button.type = "button";
-        button.setAttribute("aria-label", `Slot ${i + 1}`);
+function fillSlot(button, index) {
+    const slot = inventory[index];
+    if (!slot) return;
 
-        const slot = inventory[i];
+    const def = getItemDefinition(slot.itemId);
+    button.title = `${def.name} ×${slot.count}`;
+    button.setAttribute("aria-label", `${def.name} x${slot.count}, slot ${index + 1}`);
+    button.appendChild(createItemIcon(slot.itemId));
 
-        if (slot) {
-            const def = getItemDefinition(slot.itemId);
-
-            button.title = `${def.name} x${slot.count}`;
-            button.setAttribute(
-                "aria-label",
-                `${def.name} x${slot.count}, slot ${i + 1}`
-            );
-
-            const icon = document.createElement("img");
-
-            icon.className = "item-icon";
-            icon.src = def.icon;
-            icon.alt = "";
-            icon.draggable = false;
-
-            icon.addEventListener("error", () => {
-                icon.remove();
-
-                const fallback = document.createElement("span");
-                fallback.textContent = def.name
-                    .substring(0, 2)
-                    .toUpperCase();
-
-                button.appendChild(fallback);
-            }, { once: true });
-
-            button.appendChild(icon);
-
-            if (slot.count > 1) {
-                const count = document.createElement("span");
-
-                count.className = "item-quantity";
-                count.textContent = String(slot.count);
-
-                button.appendChild(count);
-            }
-        }
-
-        button.addEventListener(
-            "click",
-            () => clickInventorySlot(i)
-        );
-
-        fragment.appendChild(button);
+    if (slot.count > 1) {
+        const count = document.createElement("span");
+        count.className = "item-quantity";
+        count.textContent = String(slot.count);
+        button.appendChild(count);
     }
 
-    ui.grid.replaceChildren(fragment);
+    button.addEventListener("contextmenu", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        showItemMenu(index, event.clientX, event.clientY);
+    });
+}
+
+function createInventorySlot(index) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "inventory-slot";
+    if (selectedSlot === index) button.classList.add("selected");
+    if (index === selectedHotbarSlot) button.classList.add("hotbar-equipped");
+    button.setAttribute("aria-label", `Inventory slot ${index + 1}`);
+
+    fillSlot(button, index);
+    button.draggable = Boolean(inventory[index]);
+
+    button.addEventListener("click", () => clickInventorySlot(index));
+    button.addEventListener("dragstart", event => {
+        if (!inventory[index]) {
+            event.preventDefault();
+            return;
+        }
+        closeItemMenu();
+        draggedSlot = index;
+        event.dataTransfer.setData("text/plain", String(index));
+        event.dataTransfer.effectAllowed = "move";
+    });
+
+    button.addEventListener("dragover", event => {
+        if (draggedSlot < 0) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        button.classList.add("drag-over");
+    });
+
+    button.addEventListener("dragleave", () => button.classList.remove("drag-over"));
+
+    button.addEventListener("drop", event => {
+        event.preventDefault();
+        const from = draggedSlot;
+        draggedSlot = -1;
+        selectedSlot = -1;
+        if (from !== -1) moveInventoryItem(from, index);
+        button.classList.remove("drag-over");
+    });
+
+    button.addEventListener("dragend", () => {
+        draggedSlot = -1;
+        document.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+    });
+
+    return button;
+}
+
+function renderInventory() {
+    if (!inventoryOpen) return;
+
+    const backpack = document.createDocumentFragment();
+    const hotbar = document.createDocumentFragment();
+
+    for (let i = HOTBAR_SLOTS; i < INVENTORY_SLOTS; i++) {
+        backpack.appendChild(createInventorySlot(i));
+    }
+    for (let i = 0; i < HOTBAR_SLOTS; i++) {
+        hotbar.appendChild(createInventorySlot(i));
+    }
+
+    ui.grid.replaceChildren(backpack);
+    ui.invHotbar.replaceChildren(hotbar);
 
     const selected = inventory[selectedSlot];
-
     ui.description.textContent = selected
         ? `${getItemDefinition(selected.itemId).name} ×${selected.count}`
         : `${inventory.filter(Boolean).length} / ${INVENTORY_SLOTS} slots used`;
 }
 
+function renderHotbar() {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < HOTBAR_SLOTS; i++) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "hotbar-slot" + (i === selectedHotbarSlot ? " active" : "");
+        button.setAttribute("aria-label", `Hotbar slot ${i + 1}`);
+        button.setAttribute("aria-pressed", String(i === selectedHotbarSlot));
+        fillSlot(button, i);
+
+        const number = document.createElement("span");
+        number.className = "hotbar-number";
+        number.textContent = String(i + 1);
+        button.appendChild(number);
+
+        button.addEventListener("click", () => selectHotbarSlot(i));
+        fragment.appendChild(button);
+    }
+
+    ui.hotbar.replaceChildren(fragment);
+}
+
 function toggleInventory(forceOpen = !inventoryOpen) {
     inventoryOpen = forceOpen;
-
     ui.screen.hidden = !inventoryOpen;
     ui.pickup.hidden = true;
-
     keys.clear();
-
     player.moving = false;
     player.walkDistance = 0;
     player.walkFrame = 0;
     selectedSlot = -1;
-
-    if (inventoryOpen) {
-        renderInventory();
-    }
+    closeItemMenu();
+    if (inventoryOpen) renderInventory();
 }
 
+// dropped items
+// call spawnDroppedItem("basic-egg", player.x + 20, player.y, 1)
+// you can use any item id and its items/<id>.png texture
+function spawnDroppedItem(itemId, x = player.x, y = player.y, count = 1) {
+    if (!validItemId(itemId) || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+    if (!Number.isInteger(count) || count <= 0) return null;
+
+    const item = { id: nextDropId++, itemId, x, y, count };
+    droppedItems.push(item);
+    getItemTexture(itemId);
+    saveGame();
+    return item;
+}
+
+// right click menu
+function closeItemMenu() {
+    ui.menu.hidden = true;
+    menuSlot = -1;
+    deleteConfirm = false;
+}
+
+function showItemMenu(index, x, y) {
+    if (!inventory[index]) return;
+    menuSlot = index;
+    deleteConfirm = false;
+
+    const item = inventory[index];
+    ui.menuTitle.textContent = getItemDefinition(item.itemId).name;
+    ui.menuDescription.textContent = `Stack of ${item.count}. Choose what to do.`;
+    ui.menuDrop.hidden = false;
+    ui.menuDrop.textContent = `Drop stack ×${item.count}`;
+    ui.menuDelete.textContent = "Delete forever";
+    ui.menuDelete.classList.remove("confirm");
+    ui.menu.hidden = false;
+
+    const width = ui.menu.offsetWidth;
+    const height = ui.menu.offsetHeight;
+    ui.menu.style.left = `${Math.max(5, Math.min(x, window.innerWidth - width - 6))}px`;
+    ui.menu.style.top = `${Math.max(5, Math.min(y, window.innerHeight - height - 6))}px`;
+}
+
+ui.menuDrop.addEventListener("click", () => {
+    const item = inventory[menuSlot];
+    if (!item) { closeItemMenu(); return; }
+
+    const offsetX = player.facing === "left" ? -17 : player.facing === "right" ? 17 : 0;
+    const offsetY = player.facing === "up" ? -18 : player.facing === "down" ? 18 : 0;
+    const drop = spawnDroppedItem(item.itemId, player.x + offsetX, player.y + offsetY, item.count);
+    if (!drop) return;
+
+    inventory[menuSlot] = null;
+    selectedSlot = -1;
+    closeItemMenu();
+    saveGame();
+    renderInventory();
+    renderHotbar();
+    showMessage(`Dropped ${getItemDefinition(item.itemId).name} ×${item.count}`);
+});
+
+ui.menuDelete.addEventListener("click", () => {
+    const item = inventory[menuSlot];
+    if (!item) { closeItemMenu(); return; }
+
+    if (!deleteConfirm) {
+        deleteConfirm = true;
+        ui.menuTitle.textContent = "Delete permanently?";
+        ui.menuDescription.textContent = `${getItemDefinition(item.itemId).name} ×${item.count} will be lost forever.`;
+        ui.menuDrop.hidden = true;
+        ui.menuDelete.textContent = "Yes, delete forever";
+        ui.menuDelete.classList.add("confirm");
+        return;
+    }
+
+    const name = getItemDefinition(item.itemId).name;
+    inventory[menuSlot] = null;
+    selectedSlot = -1;
+    closeItemMenu();
+    saveGame();
+    renderInventory();
+    renderHotbar();
+    showMessage(`Permanently deleted ${name} ×${item.count}`);
+});
+
+ui.menuCancel.addEventListener("click", closeItemMenu);
+
+document.addEventListener("pointerdown", event => {
+    if (!ui.menu.hidden && !ui.menu.contains(event.target)) closeItemMenu();
+});
+
 loadGame();
-renderInventory();
+renderHotbar();
 
 
 function loadImage(path) {
@@ -1191,20 +1534,62 @@ function getNearestEgg() {
     return nearest;
 }
 
-function collectNearbyEgg() {
+function getNearestGroundItem() {
     const egg = getNearestEgg();
+    let result = egg ? { type: "egg", itemId: "basic-egg", count: 1, egg } : null;
+    let nearestDistanceSq = egg
+        ? (egg.x - player.x) ** 2 + (egg.y - player.y) ** 2
+        : EGG_PICKUP_DISTANCE * EGG_PICKUP_DISTANCE;
 
-    if (!egg) return;
+    for (const item of droppedItems) {
+        const distanceSq = (item.x - player.x) ** 2 + (item.y - player.y) ** 2;
+        if (distanceSq > nearestDistanceSq) continue;
+        nearestDistanceSq = distanceSq;
+        result = { type: "dropped", itemId: item.itemId, count: item.count, drop: item };
+    }
 
-    if (!addInventoryItem("basic-egg", 1)) {
+    return result;
+}
+
+function collectNearbyItem() {
+    const nearby = getNearestGroundItem();
+    if (!nearby) return;
+
+    if (!addInventoryItem(nearby.itemId, nearby.count)) {
         showMessage("Your inventory is full!");
         return;
     }
 
-    collectedEggs.add(egg.key);
-    saveGame();
+    if (nearby.type === "egg") {
+        collectedEggs.add(nearby.egg.key);
+    } else {
+        const index = droppedItems.findIndex(item => item.id === nearby.drop.id);
+        if (index !== -1) droppedItems.splice(index, 1);
+    }
 
-    showMessage("Picked up Basic Egg ×1");
+    saveGame();
+    showMessage(`Picked up ${getItemDefinition(nearby.itemId).name} ×${nearby.count}`);
+}
+
+function drawDroppedItems(cameraX, cameraY) {
+    for (const item of droppedItems) {
+        const sx = Math.round(item.x - cameraX);
+        const sy = Math.round(item.y - cameraY);
+        if (sx < -20 || sy < -20 || sx > canvas.width + 20 || sy > canvas.height + 20) continue;
+
+        const bob = Math.round(Math.sin(gameTime * 3 + item.id) * 1.5);
+        const texture = getItemTexture(item.itemId);
+        drawShadow(ctx, sx - 8, sy - 10, 16, 16, {
+            opacity: 0.25, scale: 0.75, offsetY: 2
+        });
+
+        if (imageReady(texture)) {
+            ctx.drawImage(texture, sx - 8, sy - 10 + bob, 16, 16);
+        } else {
+            ctx.fillStyle = "#d6b0ec";
+            ctx.fillRect(sx - 5, sy - 7 + bob, 10, 10);
+        }
+    }
 }
 
 function drawEggs(cameraX, cameraY) {
@@ -1386,7 +1771,12 @@ function updateUI(dt) {
     }
 
     if (!inventoryOpen) {
-        ui.pickup.hidden = !getNearestEgg();
+        const nearby = getNearestGroundItem();
+        ui.pickup.hidden = !nearby;
+        if (nearby) {
+            ui.pickupName.textContent = getItemDefinition(nearby.itemId).name +
+                (nearby.count > 1 ? ` ×${nearby.count}` : "");
+        }
     }
 }
 // update game
@@ -1493,6 +1883,7 @@ function draw() {
 
     drawGround(cameraX, cameraY);
     drawEggs(cameraX, cameraY);
+    drawDroppedItems(cameraX, cameraY);
 
     const trees = getTreesInBounds(
         cameraX - TREE_SIZE,
@@ -1567,6 +1958,18 @@ window.addEventListener("keydown", (event) => {
         event.preventDefault();
     }
 
+    if (event.code === "Escape" && !ui.menu.hidden) {
+        event.preventDefault();
+        closeItemMenu();
+        return;
+    }
+
+    if (!event.ctrlKey && !event.altKey && !event.metaKey && /^Digit[1-9]$/.test(event.code)) {
+        event.preventDefault();
+        if (!event.repeat) selectHotbarSlot(Number(event.code.slice(-1)) - 1);
+        return;
+    }
+
     if (
         event.code === "KeyE" ||
         event.code === "Escape"
@@ -1604,7 +2007,7 @@ window.addEventListener("keydown", (event) => {
         event.preventDefault();
 
         if (!event.repeat) {
-            collectNearbyEgg();
+            collectNearbyItem();
         }
 
         return;
