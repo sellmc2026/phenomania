@@ -192,9 +192,8 @@ canvas {
 }
 
 #gameContainer {
-    position: relative;
-    width: 320px;
-    height: 180px;
+    position: fixed;
+    inset: 0;
 }
 
 #tool {
@@ -202,6 +201,7 @@ canvas {
     left: 100px;
     top: 50px;
     padding-top: 5px;
+    z-index: 10;
 }
 
 @media (max-width: 390px) {
