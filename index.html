@@ -472,6 +472,8 @@ function loadGame() {
         console.warn("Unable to load saved game:", error);
     }
 }
+
+
 // inventory system
 function addInventoryItem(itemId, amount = 1) {
     if (
@@ -1624,6 +1626,12 @@ window.addEventListener("keydown", (event) => {
     }
 
     keys.add(event.code);
+});
+
+window.addEventListener("keydown", (event) => {
+    if (event.KeyF) {
+        console.log("Chicken in the corn! So the corn can't grow, mama!");
+    }
 });
 
 window.addEventListener("keyup", (event) => {
