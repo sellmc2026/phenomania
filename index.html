@@ -191,6 +191,19 @@ canvas {
     color: #60614d;
 }
 
+#gameContainer {
+    position: relative;
+    width: 320px;
+    height: 180px;
+}
+
+#tool {
+    position: absolute;
+    left: 100px;
+    top: 50px;
+    padding-top: 5px;
+}
+
 @media (max-width: 390px) {
     .inventory-grid { gap: 4px; }
     .inventory-panel { padding: 11px; }
@@ -203,6 +216,11 @@ canvas {
 <body>
 
 <canvas id="game"></canvas>
+
+<div id="gameContainer">
+    <canvas id="gameCanvas" width="320" height="180"></canvas>
+    <button id="tool">Tool</button>
+</div>
 
 <div class="game-ui">
     <div class="hud">
