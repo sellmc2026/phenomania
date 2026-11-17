@@ -1482,61 +1482,45 @@ async function cutTree(tree) {
     tree.cutting = true;
     player.cutting = true;
     player.cutStartedAt = performance.now();
-    const flip = getTreeShakeFlip(tree);
-
-    tree.cutStage = Math.min(
-        4,
-        Math.floor((tree.cutDamage / TREE_CUT_HEALTH) * 4) + 1
-    );
-
-    const image = tree.animation
-        ? treeCutImage
-        : treeImage;
-        
-    ctx.drawImage(image, tree.x, tree.y);
 
     try {
-        await sleep(AXE_DURATION / 2.5);
+        await sleep(AXE_DURATION);
+
+        if (cutTrees.has(tree.key)) return;
+
+        const damage = TREE_CUT_HEALTH / hitsRequired;
+
+        tree.cutDamage = Math.min(
+            TREE_CUT_HEALTH,
+            (tree.cutDamage || 0) + damage
+        );
+
+        if (tree.cutDamage >= TREE_CUT_HEALTH - 0.00001) {
+            cutTrees.add(tree.key);
+            treeCache.delete(tree.key);
+            saveCutTrees();
+            spawnDroppedItem("wood", tree.x, tree.y, 2);
+            showMessage("Tree cut! Dropped 2 Wood");
+        } else {
+            tree.cutStage = Math.min(
+                4,
+                Math.floor((tree.cutDamage / TREE_CUT_HEALTH) * 4) + 1
+            );
+
+            const hitsLeft = Math.ceil(
+                (TREE_CUT_HEALTH - tree.cutDamage) / damage - 0.00001
+            );
+
+            showMessage(`Tree: ${hitsLeft} more ${hitsLeft === 1 ? "hit" : "hits"} with this axe`);
+        }
+
+    } finally {
+        tree.cutting = false;
+        tree.punching = false;
+        player.cutting = false;
+        player.punching = false;
+        freezePlayer = false;
     }
-
-
-    if (tree.cutStage === 1) {
-        tree.animation = "tree-cut-1.png";
-    } else if (tree.cutStage === 2) {
-        tree.animation = "tree-cut-2.png";
-    } else if (tree-cutStage === 3) {
-        tree.animation = "tree-cut-3.png";
-    } else if (tree-cutStage === 4) {
-        tree.animation = "tree-cut-4.png";
-    }
-
-        
-        
-
-    await sleep(TREE_PUNCH_DURATION * 1000);
-    if (cutTrees.has(tree.key)) return;
-
-        // shared health means upgrading axes mid-tree keeps existing progress
-    const damage = TREE_CUT_HEALTH / hitsRequired;
-    tree.cutDamage = Math.min(TREE_CUT_HEALTH, tree.cutDamage + damage);
-
-    if (tree.cutDamage >= TREE_CUT_HEALTH - 0.00001) {
-        cutTrees.add(tree.key);
-        treeCache.delete(tree.key);
-        saveCutTrees();
-        spawnDroppedItem("wood", tree.x, tree.y, 2);
-        showMessage("Tree cut! Dropped 2 Wood");
-    } else {
-        const hitsLeft = Math.ceil((TREE_CUT_HEALTH - tree.cutDamage) / damage - 0.00001);
-        showMessage(`Tree: ${hitsLeft} more ${hitsLeft === 1 ? "hit" : "hits"} with this axe`);
-    }
-} finally {
-    tree.cutting = false;
-    tree.punching = false;
-    tree.animation = null;
-    player.cutting = false;
-    player.punching = false;
-    freezePlayer = false;
 }
 
 
