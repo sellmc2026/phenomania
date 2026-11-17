@@ -1539,7 +1539,10 @@ async function holdToCutTree(tree) {
     autoCutting = true;
 
     try {
-        while (keys.has("Space") && !cutTrees.has(tree.key)) {
+        while (
+            (keys.has("KeyZ") || keys.has("Enter")) &&
+            !cutTrees.has(tree.key)
+        ) {
             const previousDamage = tree.cutDamage || 0;
 
             await cutTree(tree);
