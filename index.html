@@ -1533,6 +1533,28 @@ async function cutTree(tree) {
     }
 }
 
+let autoCutting = false;
+
+async function holdToCutTree(tree) {
+    if (autoCutting) return;
+
+    autoCutting = true;
+
+    try {
+        while (keys.has("Space") && !cutTrees.has(tree.key)) {
+            const previousDamage = tree.cutDamage || 0;
+
+            await cutTree(tree);
+
+            if (cutTrees.has(tree.key)) break;
+
+            // Stop if the cut was unsuccessful
+            if ((tree.cutDamage || 0) <= previousDamage) break;
+        }
+    } finally {
+        autoCutting = false;
+    }
+}
 
 // find nearest tree
 function getNearestTree() {
@@ -2155,7 +2177,7 @@ window.addEventListener("keydown", (event) => {
             if (tree) {
                 const heldItemId = getHeldItem()?.itemId;
                 if (AXE_HIT_RANGES[heldItemId]) {
-                    cutTree(tree);
+                    holdToCutTree(tree);
                 } else {
                     punchTree(tree);
                 }
