@@ -1499,20 +1499,23 @@ async function cutTree(tree) {
 
         if (cutTrees.has(tree.key)) return;
 
-        const damage = 60 / hitsRequired;
-        tree.cutDamage = (tree.cutDamage || 0) + damage;
-
-        if (tree.cutDamage >= 60) {
+        if (tree.cutStage === 5) {
             cutTrees.add(tree.key);
             treeCache.delete(tree.key);
-            tree.cutStage = 5; 
             saveCutTrees();
-            spawnDroppedItem("wood", tree.x, tree.y, 2);
-            showMessage("Dropped 2 Wood");
         } else {
-            tree.cutStage = Math.ceil(tree.cutDamage / 15);
+            const damage = 60 / hitsRequired;
+            tree.cutDamage = Math.min(60, (tree.cutDamage || 0) + damage);
 
-            const hitsLeft = Math.ceil((60 - tree.cutDamage) / damage);
+            if (tree.cutDamage >= 60) {
+                tree.cutStage = 5;
+                spawnDroppedItem("wood", tree.x, tree.y, 2);
+                showMessage("Dropped 2 Wood");
+            } else {
+                tree.cutStage = Math.ceil(tree.cutDamage / 15);
+
+                const hitsLeft = Math.ceil((60 - tree.cutDamage) / damage);
+            }
         }
 
         await sleep(700);
@@ -1599,7 +1602,7 @@ function drawTree(tree, cameraX, cameraY) {
         }
     
     } else if (tree.cutStage === 5) {
-        texture = treeStumpImage;
+        texture = treeCutImages[4];
     } else if (tree.cutStage >= 1 && tree.cutStage <= 4) {
         texture = treeCutImages[tree.cutStage - 1];
     }
