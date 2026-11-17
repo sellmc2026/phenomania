@@ -2170,10 +2170,11 @@ window.addEventListener("keydown", (event) => {
 
     if (inventoryOpen) return;
 
-    if (event.code === "Space") {
+    if (event.code === "KeyZ" || "Enter") {
         event.preventDefault();
     
-        keys.add("Space");
+        keys.add("KeyZ");
+        keys.add("Enter");
     
         if (!event.repeat) {
             const tree = getNearestTree();
