@@ -1479,11 +1479,7 @@ const treeCutImages = [
     loadImage("trees/tree-cut-4.png")
 ];
 
-const image = tree.cutStage
-    ? treeCutImages[tree.cutStage - 1]
-    : treeImage;
 
-ctx.drawImage(image, tree.x, tree.y);
     
 async function cutTree(tree) {
     if (!tree || tree.cutting || tree.punching || player.cutting || player.punching) return;
@@ -1586,6 +1582,8 @@ function drawTree(tree, cameraX, cameraY) {
             tree.animation = null;
             tree.punching = false;
         }
+    } else if (tree.cutStage && tree.cutStage >= 1 && tree.cutStage <= 4) {
+        texture = treeCutImages[tree.cutStage - 1];
     }
 
     if (!imageReady(texture)) return;
