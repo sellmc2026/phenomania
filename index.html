@@ -1470,6 +1470,20 @@ const maleAxeLeft = loadImage(
 const AXE_FRAME_COUNT = 20;
 const AXE_FPS = 20;
 const AXE_DURATION = (AXE_FRAME_COUNT / AXE_FPS) * 1000;
+
+
+const treeCutImages = [
+    loadImage("trees/tree-cut-1.png"),
+    loadImage("trees/tree-cut-2.png"),
+    loadImage("trees/tree-cut-3.png"),
+    loadImage("trees/tree-cut-4.png")
+];
+
+const image = tree.cutStage
+    ? treeCutImages[tree.cutStage - 1]
+    : treeImage;
+
+ctx.drawImage(image, tree.x, tree.y);
     
 async function cutTree(tree) {
     if (!tree || tree.cutting || tree.punching || player.cutting || player.punching) return;
