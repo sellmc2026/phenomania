@@ -1832,9 +1832,9 @@ function drawPlayer(screenX, screenY) {
 
     if (player.cutting) {
         const elapsed = performance.now() - player.cutStartedAt;
-        const frame = Math.floor(elapsed / 50);
+        const frame = Math.floor(elapsed / (1000 / AXE_FPS));
     
-        if (frame < 10 && imageReady(maleAxeLeft)) {
+        if (frame < AXE_FRAME_COUNT && imageReady(maleAxeLeft)) {
             drawPlayerSpriteFrame(
                 maleAxeLeft,
                 frame,
