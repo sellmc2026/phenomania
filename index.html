@@ -1484,10 +1484,32 @@ async function cutTree(tree) {
     player.cutStartedAt = performance.now();
     const flip = getTreeShakeFlip(tree);
 
+    tree.cutStage = Math.min(
+        4,
+        Math.floor((tree.cutDamage / TREE_CUT_HEALTH) * 4) + 1
+    );
+
+    const image = tree.animation
+        ? treeCutImage
+        : treeImage;
+        
+    ctx.drawImage(image, tree.x, tree.y);
+
     try {
         await sleep(AXE_DURATION / 2.5);
 
-        tree = "tree-cut-1.png";
+
+        if (tree.cutStage === 1) {
+            tree.animation = "tree-cut-1.png";
+        } else if (tree.cutStage === 2) {
+            tree.animation = "tree-cut-2.png";
+        } else if (tree-cutStage === 3) {
+            tree.animation = "tree-cut-3.png";
+        } else if (tree-cutStage === 4) {
+            tree.animation = "tree-cut-4.png";
+        }\
+
+        
         
 
         await sleep(TREE_PUNCH_DURATION * 1000);
