@@ -1476,7 +1476,8 @@ const treeCutImages = [
     loadImage("trees/tree-cut-1.png"),
     loadImage("trees/tree-cut-2.png"),
     loadImage("trees/tree-cut-3.png"),
-    loadImage("trees/tree-cut-4.png")
+    loadImage("trees/tree-cut-4.png"),
+    loadImage("trees/tree-stump.png")
 ];
 
 
@@ -1494,35 +1495,27 @@ async function cutTree(tree) {
     player.cutStartedAt = performance.now();
 
     try {
-        await sleep(AXE_DURATION - AXE_DURATION / 2.5 + 100);
+        await sleep(400);
 
         if (cutTrees.has(tree.key)) return;
 
-        const damage = TREE_CUT_HEALTH / hitsRequired;
+        const damage = 60 / hitsRequired;
+        tree.cutDamage = (tree.cutDamage || 0) + damage;
 
-        tree.cutDamage = Math.min(
-            TREE_CUT_HEALTH,
-            (tree.cutDamage || 0) + damage
-        );
-
-        if (tree.cutDamage >= TREE_CUT_HEALTH - 0.00001) {
+        if (tree.cutDamage >= 60) {
             cutTrees.add(tree.key);
             treeCache.delete(tree.key);
+            tree.cutStage = 5; 
             saveCutTrees();
             spawnDroppedItem("wood", tree.x, tree.y, 2);
-            showMessage("Tree cut! Dropped 2 Wood");
+            showMessage("Dropped 2 Wood");
         } else {
-            tree.cutStage = Math.min(
-                4,
-                Math.floor((tree.cutDamage / TREE_CUT_HEALTH) * 4) + 1
-            );
+            tree.cutStage = Math.ceil(tree.cutDamage / 15);
 
-            const hitsLeft = Math.ceil(
-                (TREE_CUT_HEALTH - tree.cutDamage) / damage - 0.00001
-            );
-
-            showMessage(`Tree: ${hitsLeft} more ${hitsLeft === 1 ? "hit" : "hits"} with this axe`);
+            const hitsLeft = Math.ceil((60 - tree.cutDamage) / damage);
         }
+
+        await sleep(700);
 
     } finally {
         tree.cutting = false;
@@ -1604,9 +1597,13 @@ function drawTree(tree, cameraX, cameraY) {
             tree.animation = null;
             tree.punching = false;
         }
-    } else if (tree.cutStage && tree.cutStage >= 1 && tree.cutStage <= 4) {
+    
+    } else if (tree.cutStage === 5) {
+        texture = treeStumpImage;
+    } else if (tree.cutStage >= 1 && tree.cutStage <= 4) {
         texture = treeCutImages[tree.cutStage - 1];
     }
+    
 
     if (!imageReady(texture)) return;
 
