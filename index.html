@@ -245,10 +245,10 @@ canvas {
 }
 
 .item-icon {
-    width: 74%;
-    height: 74%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    image-rendering: pixelated;
+    
     user-select: none;
     pointer-events: none;
 }
@@ -957,9 +957,7 @@ function toggleInventory(forceOpen = !inventoryOpen) {
     if (inventoryOpen) renderInventory();
 }
 
-// dropped items
-// call spawnDroppedItem("basic-egg", player.x + 20, player.y, 1)
-// you can use any item id and its items/<id>.png texture
+
 function spawnDroppedItem(itemId, x = player.x, y = player.y, count = 1) {
     if (!validItemId(itemId) || !Number.isFinite(x) || !Number.isFinite(y)) return null;
     if (!Number.isInteger(count) || count <= 0) return null;
