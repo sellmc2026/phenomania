@@ -424,6 +424,14 @@ canvas {
 
 <script>
 "use strict";
+
+
+
+window.give = function(itemId, amount = 1) {
+    addInventoryItem(itemId, amount);
+    console.log(`Gave ${amount}x ${itemId}`);
+};
+    
 // settings
 let freezePlayer = false;
 
@@ -512,8 +520,27 @@ function drawShadow(ctx, x, y, width, height, options = {}) {
 const ITEM_DEFINITIONS = {
     "basic-egg": {
         name: "Basic Egg",
+        nameColor: "#ffffff",
         icon: "items/basic-egg.png",
         maxStack: 52
+    },
+    "axe-level-1": {
+        name: "Axe ʟᴇᴠᴇʟ 1",
+        nameColor: "#ffffff",
+        icon: "items/axe-level-1.png",
+        maxStack: 1,
+    },
+    "axe-level-2": {
+        name: "Axe ʟᴇᴠᴇʟ 2",
+        nameColor: "#FCAED9",
+        icon: "items/axe-level-2.png",
+        maxStack: 1,
+    },
+    "axe-level-3": {
+        name: "Axe ʟᴇᴠᴇʟ 3",
+        nameColor: "#F9D895",
+        icon: "items/axe-level-3.png",
+        maxStack: 1,
     }
 };
 
@@ -873,6 +900,10 @@ function renderInventory() {
     ui.description.textContent = selected
         ? `${getItemDefinition(selected.itemId).name} ×${selected.count}`
         : `${inventory.filter(Boolean).length} / ${INVENTORY_SLOTS} slots used`;
+
+    ui.description.style.color = selected
+        ? (getItemDefinition(selected.itemId).nameColor || "#3B2949")
+        : "#3B2949";
 }
 
 function renderHotbar() {
@@ -939,6 +970,7 @@ function showItemMenu(index, x, y) {
 
     const item = inventory[index];
     ui.menuTitle.textContent = getItemDefinition(item.itemId).name;
+    ui.menuTitle.style.color = getItemDefinition(item.itemId).nameColor || "#ffffff";
     ui.menuDescription.textContent = `Stack of ${item.count}. Choose what to do.`;
     ui.menuDrop.hidden = false;
     ui.menuDrop.textContent = `Drop stack ×${item.count}`;
