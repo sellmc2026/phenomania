@@ -1487,11 +1487,8 @@ async function cutTree(tree) {
     try {
         await sleep(AXE_DURATION / 2.5);
 
-        // keep the existing tree shake animation and collision during the strike
-        if (treePunchFrames.every(imageReady)) {
-            tree.punching = true;
-            tree.animation = { startedAt: performance.now(), flip };
-        }
+        tree = "tree-cut-1.png";
+        
 
         await sleep(TREE_PUNCH_DURATION * 1000);
         if (cutTrees.has(tree.key)) return;
