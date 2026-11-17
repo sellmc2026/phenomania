@@ -459,6 +459,15 @@ const TREE_PUNCH_FPS = 16;
 const TREE_PUNCH_FRAME_COUNT = 9;
 const TREE_PUNCH_DURATION = TREE_PUNCH_FRAME_COUNT / TREE_PUNCH_FPS;
 
+// each axe needs this many hits when used alone on an untouched tree
+const TREE_CUT_HEALTH = 60;
+const AXE_HIT_RANGES = {
+    "axe-level-1": [5, 5],
+    "axe-level-2": [3, 4],
+    "axe-level-3": [1, 3]
+};
+const CUT_TREES_SAVE_KEY = "pixelPetGame.cutTrees.v1";
+
 const HOTBAR_SLOTS = 9;
 const INVENTORY_SLOTS = 36;
 const SAVE_KEY = "pixelPetGame.inventory.v3";
@@ -541,6 +550,12 @@ const ITEM_DEFINITIONS = {
         nameColor: "#F9D895",
         icon: "items/axe-level-3.png",
         maxStack: 1,
+    },
+    "wood": {
+        name: "Wood",
+        nameColor: "#C99B6A",
+        icon: "items/wood.png",
+        maxStack: 64
     }
 };
 
@@ -1281,9 +1296,31 @@ function isNearPlot(x, y, margin = 10) {
 }
 // trees
 const treeCache = new Map();
+const cutTrees = new Set();
+
+try {
+    const saved = JSON.parse(localStorage.getItem(CUT_TREES_SAVE_KEY) || "[]");
+    if (Array.isArray(saved)) {
+        for (const key of saved) {
+            if (typeof key === "string") cutTrees.add(key);
+        }
+    }
+} catch (error) {
+    console.warn("Could not load cut trees:", error);
+}
+
+function saveCutTrees() {
+    try {
+        localStorage.setItem(CUT_TREES_SAVE_KEY, JSON.stringify([...cutTrees]));
+    } catch (error) {
+        console.warn("Could not save cut trees:", error);
+    }
+}
 
 function getTreeInCell(cx, cy) {
     const key = `${cx},${cy}`;
+
+    if (cutTrees.has(key)) return null;
 
     if (treeCache.has(key)) {
         return treeCache.get(key);
@@ -1315,9 +1352,14 @@ function getTreeInCell(cx, cy) {
     }
 
     const tree = {
+        key,
+        cx,
+        cy,
         x,
         y,
         punching: false,
+        cutting: false,
+        cutDamage: 0,
         animation: null
     };
 
@@ -1382,51 +1424,94 @@ function isTreeSolid(x, y) {
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-let runPunchTreeAnimationRight = false;
-let runPunchTreeAnimationLeft = false;
 
-    
+function getTreeShakeFlip(tree) {
+    if (player.facing === "up") return true;
+    if (player.facing === "down") return false;
+    return player.x < tree.x;
+}
 
+// trees differ in hardness, but each axe always stays in its promised hit range
+function getTreeHitsForAxe(tree, axeId) {
+    const range = AXE_HIT_RANGES[axeId];
+    if (!range) return null;
+    const [minHits, maxHits] = range;
+    if (minHits === maxHits) return minHits;
+
+    const seed = hash(
+        tree.cx + (axeId === "axe-level-2" ? 19317 : 72583),
+        tree.cy - (axeId === "axe-level-2" ? 6319 : 29011)
+    );
+    return minHits + (seed % (maxHits - minHits + 1));
+}
 
 async function punchTree(tree) {
-    if (!tree || tree.punching || player.punching) return;
-
-    let punchRight = false;
-
-    if (player.facing === "down") {
-        punchRight = player.forwardSide === "right";
-    } else if (player.facing === "right") {
-        punchRight = true;
-    } else if (player.facing === "left") {
-        punchRight = false;
-    } else if (player.facing === "up") {
-        punchRight = player.x < tree.x;
-    }
+    if (!tree || tree.punching || tree.cutting || player.punching || player.cutting) return;
+    if (cutTrees.has(tree.key)) return;
 
     player.punching = true;
     player.punchStartedAt = performance.now();
-
-    const flip = player.facing === "up"
-        ? true
-        : player.facing === "down"
-            ? false
-            : player.x < tree.x;
+    const flip = getTreeShakeFlip(tree);
 
     await sleep(300);
 
-    if (!tree || tree.punching) return;
+    if (cutTrees.has(tree.key) || tree.cutting || tree.punching) return;
     if (!treePunchFrames.every(imageReady)) return;
 
     tree.punching = true;
-
-    tree.animation = {
-        startedAt: performance.now(),
-        flip
-    };
+    tree.animation = { startedAt: performance.now(), flip };
 }
 
+async function cutTree(tree) {
+    if (!tree || tree.cutting || tree.punching || player.cutting || player.punching) return;
+    if (cutTrees.has(tree.key)) return;
 
-    
+    const axeId = getHeldItem()?.itemId;
+    const hitsRequired = getTreeHitsForAxe(tree, axeId);
+    if (hitsRequired === null) return;
+
+    tree.cutting = true;
+    player.cutting = true;
+    player.punching = true;
+    player.punchStartedAt = performance.now();
+    const flip = getTreeShakeFlip(tree);
+
+    try {
+        await sleep(300);
+
+        // keep the existing tree shake animation and collision during the strike
+        if (treePunchFrames.every(imageReady)) {
+            tree.punching = true;
+            tree.animation = { startedAt: performance.now(), flip };
+        }
+
+        await sleep(TREE_PUNCH_DURATION * 1000);
+        if (cutTrees.has(tree.key)) return;
+
+        // shared health means upgrading axes mid-tree keeps existing progress
+        const damage = TREE_CUT_HEALTH / hitsRequired;
+        tree.cutDamage = Math.min(TREE_CUT_HEALTH, tree.cutDamage + damage);
+
+        if (tree.cutDamage >= TREE_CUT_HEALTH - 0.00001) {
+            cutTrees.add(tree.key);
+            treeCache.delete(tree.key);
+            saveCutTrees();
+            spawnDroppedItem("wood", tree.x, tree.y, 2);
+            showMessage("Tree cut! Dropped 2 Wood");
+        } else {
+            const hitsLeft = Math.ceil((TREE_CUT_HEALTH - tree.cutDamage) / damage - 0.00001);
+            showMessage(`Tree: ${hitsLeft} more ${hitsLeft === 1 ? "hit" : "hits"} with this axe`);
+        }
+    } finally {
+        tree.cutting = false;
+        tree.punching = false;
+        tree.animation = null;
+        player.cutting = false;
+        player.punching = false;
+        freezePlayer = false;
+    }
+}
+
 // find nearest tree
 function getNearestTree() {
     let nearest = null;
@@ -1823,7 +1908,7 @@ function update(dt) {
         return;
     }
 
-    if (player.punching) {
+    if (player.punching || player.cutting) {
         player.moving = false;
         return;
     }            
@@ -2028,7 +2113,12 @@ window.addEventListener("keydown", (event) => {
             const tree = getNearestTree();
 
             if (tree) {
-                punchTree(tree);
+                const heldItemId = getHeldItem()?.itemId;
+                if (AXE_HIT_RANGES[heldItemId]) {
+                    cutTree(tree);
+                } else {
+                    punchTree(tree);
+                }
             }
         }
 
