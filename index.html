@@ -1485,7 +1485,7 @@ async function cutTree(tree) {
     const flip = getTreeShakeFlip(tree);
 
     try {
-        await sleep(AXE_DURATION);
+        await sleep(AXE_DURATION / 2.5);
 
         // keep the existing tree shake animation and collision during the strike
         if (treePunchFrames.every(imageReady)) {
