@@ -2170,12 +2170,15 @@ window.addEventListener("keydown", (event) => {
 
     if (event.code === "Space") {
         event.preventDefault();
-
+    
+        keys.add("Space");
+    
         if (!event.repeat) {
             const tree = getNearestTree();
-
+    
             if (tree) {
                 const heldItemId = getHeldItem()?.itemId;
+    
                 if (AXE_HIT_RANGES[heldItemId]) {
                     holdToCutTree(tree);
                 } else {
@@ -2183,7 +2186,7 @@ window.addEventListener("keydown", (event) => {
                 }
             }
         }
-
+    
         return;
     }
 
