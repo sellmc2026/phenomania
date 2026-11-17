@@ -1495,8 +1495,8 @@ async function cutTree(tree) {
     player.cutStartedAt = performance.now();
 
     try {
-        await sleep(400);
-
+        await sleep(AXE_DURATION - AXE_DURATION / 2.5 + 100);
+        
         if (cutTrees.has(tree.key)) return;
 
         if (tree.cutStage === 5) {
@@ -1512,13 +1512,15 @@ async function cutTree(tree) {
                 spawnDroppedItem("wood", tree.x, tree.y, 2);
                 showMessage("Dropped 2 Wood");
             } else {
-                tree.cutStage = Math.ceil(tree.cutDamage / 15);
+                tree.cutStage = Math.min(
+                    4,
+                    Math.floor((tree.cutDamage / TREE_CUT_HEALTH) * 4) + 1
+                );
 
                 const hitsLeft = Math.ceil((60 - tree.cutDamage) / damage);
             }
         }
 
-        await sleep(700);
 
     } finally {
         tree.cutting = false;
