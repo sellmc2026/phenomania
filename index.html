@@ -1494,7 +1494,7 @@ async function cutTree(tree) {
     player.cutStartedAt = performance.now();
 
     try {
-        await sleep(AXE_DURATION - AXE_DURATION / 2.5);
+        await sleep(AXE_DURATION - AXE_DURATION / 2.5 + 100);
 
         if (cutTrees.has(tree.key)) return;
 
