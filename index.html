@@ -1462,6 +1462,10 @@ async function punchTree(tree) {
     tree.animation = { startedAt: performance.now(), flip };
 }
 
+const maleAxeLeft = loadImage(
+    "characters/male/male-axe-left.png"
+);
+
 async function cutTree(tree) {
     if (!tree || tree.cutting || tree.punching || player.cutting || player.punching) return;
     if (cutTrees.has(tree.key)) return;
@@ -1472,8 +1476,7 @@ async function cutTree(tree) {
 
     tree.cutting = true;
     player.cutting = true;
-    player.punching = true;
-    player.punchStartedAt = performance.now();
+    player.cutStartedAt = performance.now();
     const flip = getTreeShakeFlip(tree);
 
     try {
@@ -1821,6 +1824,22 @@ function drawPlayer(screenX, screenY) {
     const shadowWidth = 12;
     const shadowHeight = 4;
     const shadowOpacity = 0.22;
+
+    if (player.cutting) {
+        const elapsed = performance.now() - player.cutStartedAt;
+        const frame = Math.floor(elapsed / 50);
+    
+        if (frame < 10 && imageReady(maleAxeLeft)) {
+            drawPlayerSpriteFrame(
+                maleAxeLeft,
+                frame,
+                px,
+                py,
+                PLAYER_SPRITE_SIZE
+            );
+            return;
+        }
+    }
 
     
     if (player.punching) {
