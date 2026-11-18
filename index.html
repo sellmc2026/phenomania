@@ -248,7 +248,7 @@ canvas {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    
+    image-rendering: pixelated;
     user-select: none;
     pointer-events: none;
 }
@@ -1226,6 +1226,64 @@ function resize() {
     ctx.imageSmoothingEnabled = false;
 }
 
+class Wiggler {
+  constructor(frequency, amplitude) {
+    this.frequency = frequency;
+    this.amplitude = amplitude;
+    this.seed = Math.random() * 1000;
+  }
+
+  noise(x) {
+    const i = Math.floor(x);
+    const f = x - i;
+    const u = f * f * (3.0 - 2.0 * f);
+
+    const hash = (n) => (Math.sin(n + this.seed) * 43758.5453123) % 1;
+    const a = hash(i) * 2 - 1;
+    const b = hash(i + 1) * 2 - 1;
+
+    return a + (b - a) * u;
+  }
+
+  getValue(progressInShakes) {
+    return this.noise(progressInShakes) * this.amplitude;
+  }
+}
+
+function shakeElement(element, shakes = 5, frequency = 10, amplitude = 15) {
+  const wiggleX = new Wiggler(frequency, amplitude);
+  const wiggleY = new Wiggler(frequency, amplitude);
+  const duration = shakes / frequency; // 5 shakes at 10/sec = 0.5 seconds
+  let startTime = null;
+
+  function animate(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsedSeconds = (timestamp - startTime) / 1000;
+
+    if (elapsedSeconds < duration) {
+      const currentShake = elapsedSeconds * frequency;
+      
+      // Fade out smoothly on the final shake so it doesn't snap harshly
+      const fade = currentShake > shakes - 1 ? shakes - currentShake : 1;
+
+      const x = wiggleX.getValue(currentShake) * fade;
+      const y = wiggleY.getValue(currentShake) * fade;
+
+      element.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(animate);
+    } else {
+      element.style.transform = `translate(0px, 0px)`; // Reset cleanly
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// Usage: Shake #myElement 5 times
+const box = document.getElementById("myElement");
+shakeElement(box, 5, 10, 15);
+
+
 window.addEventListener("resize", resize);
 resize();
 // ground hash
@@ -1491,6 +1549,7 @@ async function cutTree(tree) {
     tree.cutting = true;
     player.cutting = true;
     player.cutStartedAt = performance.now();
+    shakeElement(tree)
 
     try {
         await sleep(AXE_DURATION - AXE_DURATION / 2.5 + 100);
