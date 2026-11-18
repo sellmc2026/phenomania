@@ -989,7 +989,7 @@ function showItemMenu(index, x, y) {
     const item = inventory[index];
     ui.menuTitle.textContent = getItemDefinition(item.itemId).name;
     ui.menuTitle.style.color = getItemDefinition(item.itemId).nameColor || "#ffffff";
-    ui.menuDescription.textContent = `Stack of ${item.count}. Choose what to do.`;
+    ui.menuDescription.textContent = ``;
     ui.menuDrop.hidden = false;
     ui.menuDrop.textContent = `Drop stack ×${item.count}`;
     ui.menuDelete.textContent = "Delete forever";
@@ -1027,9 +1027,9 @@ ui.menuDelete.addEventListener("click", () => {
     if (!deleteConfirm) {
         deleteConfirm = true;
         ui.menuTitle.textContent = "Delete permanently?";
-        ui.menuDescription.textContent = `${getItemDefinition(item.itemId).name} ×${item.count} will be lost forever.`;
+        ui.menuDescription.textContent = `${getItemDefinition(item.itemId).name} ×${item.count} will be lost forever`;
         ui.menuDrop.hidden = true;
-        ui.menuDelete.textContent = "Yes, delete forever";
+        ui.menuDelete.textContent = "Yes";
         ui.menuDelete.classList.add("confirm");
         return;
     }
