@@ -444,6 +444,19 @@ const SPRINT_SPEED = 125;
 const PLAYER_SPRITE_SIZE = 32;
 const WALK_FRAME_DISTANCE = TILE_SIZE / 1.5;
 
+// sleeping settings (times are in seconds)
+const IDLE_SECONDS = 5;
+const SLEEP_Z_DELAY_SECONDS = 3;
+const SLEEP_Z_FLOAT_SECONDS = 2.8;
+const SLEEP_Z_INTERVAL_SECONDS = SLEEP_Z_FLOAT_SECONDS / 2;
+
+// the resting texture is 32x32, unlike the normal 16x16 player sprites
+const RESTING_SPRITE_SIZE = 64;
+const SLEEP_Z_MIN_SIZE = 12;
+const SLEEP_Z_MAX_SIZE = 17;
+const SLEEP_Z_START_X = 12;
+const SLEEP_Z_START_Y = -48;
+
 
 const EGG_RARITY = 700;
 const EGG_PICKUP_DISTANCE = 25;
@@ -600,7 +613,9 @@ const player = {
     moving: false,
     walkDistance: 0,
     walkFrame: 0,
-    shadow: true
+    shadow: true,
+    lastActivityAt: performance.now(),
+    restingSince: null
 };
 
 const inventory = Array(INVENTORY_SLOTS).fill(null);
@@ -1088,6 +1103,14 @@ const basicEggTexture = loadImage(
 );
 
 
+const playerRestingTexture = loadImage(
+    "characters/male/player-resting.png"
+);
+
+const sleepingZTexture = loadImage(
+    "sleeping-z.png"
+);
+
 const maleIdleDown = loadImage(
     "characters/male/male-idle-forward.png"
 );
@@ -1278,10 +1301,6 @@ function shakeElement(element, shakes = 5, frequency = 10, amplitude = 15) {
 
   requestAnimationFrame(animate);
 }
-
-// Usage: Shake #myElement 5 times
-const box = document.getElementById("myElement");
-shakeElement(box, 5, 10, 15);
 
 
 window.addEventListener("resize", resize);
@@ -1550,9 +1569,7 @@ async function cutTree(tree) {
     player.cutting = true;
     player.cutStartedAt = performance.now();
     
-    if (tree) {    
-        shakeElement(tree, 5, 10, 15)
-    }
+    tree.shakeStartedAt = performance.now();
     
     try {
         await sleep(AXE_DURATION - AXE_DURATION / 2.5 + 100);
@@ -1682,8 +1699,18 @@ function drawTree(tree, cameraX, cameraY) {
     ctx.fill();
     ctx.restore();
 
+    let shakeX = 0;
+    if (tree.shakeStartedAt != null) {
+        const elapsed = (performance.now() - tree.shakeStartedAt) / 1000;
+        if (elapsed < 0.5) {
+            shakeX = Math.sin(elapsed * Math.PI * 20) * 2 * (1 - elapsed / 0.5);
+        } else {
+            tree.shakeStartedAt = null;
+        }
+    }
+
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(x + shakeX, y);
     if (flip) ctx.scale(-1, 1);
     ctx.drawImage(
         texture,
@@ -1885,6 +1912,63 @@ function drawEggs(cameraX, cameraY) {
         }
     }
 }
+// sleeping
+function wakePlayer() {
+    player.lastActivityAt = performance.now();
+    player.restingSince = null;
+}
+
+function updateRestingState() {
+    if (player.punching || player.cutting || player.moving) {
+        wakePlayer();
+        return;
+    }
+
+    if (
+        player.restingSince === null &&
+        performance.now() - player.lastActivityAt >= IDLE_SECONDS * 1000
+    ) {
+        player.restingSince = performance.now();
+    }
+}
+
+function drawSleepingZs(screenX, screenY) {
+    if (player.restingSince === null || !imageReady(sleepingZTexture)) return;
+
+    const elapsed =
+        (performance.now() - player.restingSince) / 1000 - SLEEP_Z_DELAY_SECONDS;
+
+    if (elapsed < 0) return;
+
+    const latestZ = Math.floor(elapsed / SLEEP_Z_INTERVAL_SECONDS);
+
+    // a new Z appears when the previous one is halfway through its float
+    for (let i = Math.max(0, latestZ - 2); i <= latestZ; i++) {
+        const age = elapsed - i * SLEEP_Z_INTERVAL_SECONDS;
+        if (age < 0 || age >= SLEEP_Z_FLOAT_SECONDS) continue;
+
+        const t = age / SLEEP_Z_FLOAT_SECONDS;
+        const glide = t * t * (3 - 2 * t);
+        const swell = Math.sin(Math.PI * t);
+        const size = SLEEP_Z_MIN_SIZE + (SLEEP_Z_MAX_SIZE - SLEEP_Z_MIN_SIZE) * swell;
+        const opacity = 0.82 * Math.min(1, t / 0.18, (1 - t) / 0.32);
+
+        const x = screenX + SLEEP_Z_START_X + 15 * glide + Math.sin(t * Math.PI * 2) * 0.8;
+        const y = screenY + SLEEP_Z_START_Y - 26 * glide;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, opacity);
+        ctx.drawImage(
+            sleepingZTexture,
+            Math.round(x - size / 2),
+            Math.round(y - size / 2),
+            Math.round(size),
+            Math.round(size)
+        );
+        ctx.restore();
+    }
+}
+
 // player sprite selection
 function getPlayerSprite() {
     let direction = player.facing;
@@ -2000,7 +2084,17 @@ function drawPlayer(screenX, screenY) {
             ctx.restore();
         }
     
-        if (imageReady(sprite)) {
+        if (player.restingSince !== null && imageReady(playerRestingTexture)) {
+            // preserve the same 2x scaling as the 16x16 walking sprites
+            const restX = Math.floor(screenX - RESTING_SPRITE_SIZE / 2);
+            const restY = Math.floor(screenY - RESTING_SPRITE_SIZE + 4);
+            ctx.drawImage(
+                playerRestingTexture,
+                restX, restY,
+                RESTING_SPRITE_SIZE, RESTING_SPRITE_SIZE
+            );
+            drawSleepingZs(screenX, screenY);
+        } else if (imageReady(sprite)) {
             ctx.drawImage(sprite, px, py, size, size);
         }
     }
@@ -2026,6 +2120,7 @@ function updateUI(dt) {
 // update game
 function update(dt) {
     gameTime += dt;
+    updateRestingState();
     updateUI(dt);
 
     if (inventoryOpen) {
@@ -2066,6 +2161,9 @@ function update(dt) {
         player.walkFrame = 0;
         return;
     }
+
+    // trying to move wakes the player even if a tree blocks the way
+    wakePlayer();
 
     const length = Math.hypot(inputX, inputY);
 
@@ -2175,6 +2273,7 @@ function gameLoop(now) {
 requestAnimationFrame(gameLoop);
 // controls
 window.addEventListener("keydown", (event) => {
+    if (!event.repeat) wakePlayer();
 
     if (event.ctrlKey && event.code === "KeyO") {
         event.preventDefault();
@@ -2255,7 +2354,7 @@ window.addEventListener("keydown", (event) => {
         return;
     }
 
-    if (event.code === "KeyX" event.code === "ShiftRight") {
+    if (event.code === "KeyX" || event.code === "KeyC") {
         event.preventDefault();
 
         if (!event.repeat) {
@@ -2292,6 +2391,8 @@ window.addEventListener("keydown", (event) => {
 window.addEventListener("keyup", (event) => {
     keys.delete(event.code);
 });
+
+window.addEventListener("pointerdown", wakePlayer);
 
 window.addEventListener("blur", () => {
     keys.clear();
