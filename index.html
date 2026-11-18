@@ -337,28 +337,82 @@ canvas {
     inset: 0;
 }
 
+/* chat */
 #chat {
-    position: absolute;
-    left: 30px;
-    bottom: 30px;
-    width: 350px;
-    height: 500px;
-    background: #2E1F48;
-    border-radius: 6px 2px 6px 2px;
-    z-index: 10;
-    opacity: 75%;
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    width: min(360px, calc(100vw - 48px));
+    height: min(320px, 48vh);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: rgba(36, 24, 54, 0.88);
+    border: 2px solid #9473b3;
+    border-radius: 12px 5px 12px 5px;
+    box-shadow: 4px 5px 0 rgba(25, 14, 37, 0.5), inset 0 1px 0 #b89bcf;
+    color: #f8edff;
+    font: 600 13px/1.45 ui-monospace, Menlo, Consolas, monospace;
+    z-index: 12;
+    pointer-events: none;
 }
-
+#chat:focus-within { border-color: #e0b8ff; background: rgba(36, 24, 54, 0.96); }
+#chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    background: rgba(105, 68, 137, 0.6);
+    border-bottom: 1px solid #9473b3;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+}
+#chat-hint { font-size: 10px; color: #cdb4de; font-weight: 500; }
+#chat-messages {
+    flex: 1;
+    min-height: 0;
+    padding: 10px 12px;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    scrollbar-color: #8f6baa transparent;
+    scrollbar-width: thin;
+    pointer-events: auto;
+}
+.chat-message { margin: 0 0 7px; }
+.chat-message .chat-name { color: #f4d49a; }
+.chat-message.system { color: #bfa9d2; font-style: italic; font-weight: 500; }
 #chatbox {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 50px;
-    background: #1A1129; 
-    padding: 8px;
-    box-sizing: border-box;
+    display: flex;
+    gap: 7px;
+    padding: 9px;
+    background: #21152f;
+    border-top: 1px solid #72548b;
+    pointer-events: auto;
 }
+#chat-input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 10px;
+    background: #39274d;
+    border: 1px solid #82629e;
+    border-radius: 6px 2px 6px 2px;
+    color: #fff5ff;
+    outline: none;
+    font: inherit;
+}
+#chat-input::placeholder { color: #b49bc7; }
+#chat-input:focus { border-color: #e0b8ff; background: #48305e; }
+#chat-send {
+    padding: 0 12px;
+    border: 1px solid #d6aaf2;
+    border-radius: 5px 2px 5px 2px;
+    background: #8659aa;
+    color: white;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+#chat-send:hover { background: #a06bc9; }
 
 @media (max-width: 390px) {
     .inventory-grid { gap: 3px; padding: 5px; }
@@ -380,13 +434,16 @@ canvas {
     <button id="tool">Tool</button>
 </div>
 
-<!-- Chat -->
+<!-- chat -->
 <div id="chat">
-  <!-- Messages can go here -->
-  
-  <div id="chatbox">
-    <input type="text" placeholder="Type a message...">
-  </div>
+    <div id="chat-header"><span>✦ Chat</span><span id="chat-hint">T to type · Esc to close</span></div>
+    <div id="chat-messages" role="log" aria-live="polite">
+        <div class="chat-message system">Welcome to Florium!</div>
+    </div>
+    <form id="chatbox" autocomplete="off">
+        <input id="chat-input" type="text" maxlength="250" placeholder="Type a message..." aria-label="Chat message">
+        <button id="chat-send" type="submit">Send</button>
+    </form>
 </div>
 
 <div class="game-ui">
@@ -422,6 +479,7 @@ canvas {
             <div class="inventory-grid" id="inventory-hotbar-grid"></div>
 
 
+            <div class="inventory-info" id="inventory-description"></div>
         </section>
     </div>
 
@@ -599,6 +657,46 @@ function getItemDefinition(itemId) {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d", { alpha: false });
 const keys = new Set();
+const chatInput = document.getElementById("chat-input");
+const chatForm = document.getElementById("chatbox");
+const chatMessages = document.getElementById("chat-messages");
+
+function isTypingInChat() {
+    return document.activeElement === chatInput;
+}
+
+function addChatMessage(message, name = "You") {
+    const line = document.createElement("div");
+    line.className = "chat-message";
+    const sender = document.createElement("span");
+    sender.className = "chat-name";
+    sender.textContent = name + ": ";
+    line.append(sender, document.createTextNode(message));
+    chatMessages.appendChild(line);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+chatInput.addEventListener("focus", () => {
+    keys.clear();
+    player.moving = false;
+});
+chatInput.addEventListener("keydown", event => {
+    event.stopPropagation();
+    if (event.code === "Escape") {
+        event.preventDefault();
+        chatInput.blur();
+    }
+});
+chatForm.addEventListener("submit", event => {
+    event.preventDefault();
+    const message = chatInput.value.trim();
+    if (message) {
+        addChatMessage(message);
+        chatInput.value = "";
+        // Replace the local message display with server sending when multiplayer is added
+    }
+    chatInput.blur();
+});
 
 const ui = {
     pickup: document.getElementById("pickup-prompt"),
@@ -2289,6 +2387,13 @@ function gameLoop(now) {
 requestAnimationFrame(gameLoop);
 // controls
 window.addEventListener("keydown", (event) => {
+    if (isTypingInChat()) return;
+    if (event.code === "KeyT" && !event.repeat && !inventoryOpen && !event.ctrlKey && !event.altKey && !event.metaKey) {
+        event.preventDefault();
+        keys.clear();
+        chatInput.focus();
+        return;
+    }
     if (!event.repeat) wakePlayer();
 
     if (event.ctrlKey && event.code === "KeyO") {
@@ -2399,6 +2504,7 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("keydown", (event) => {
+    if (isTypingInChat()) return;
     if (event.code === "KeyF") {
         console.log("User pressed the F key... very cool!");
     }
@@ -2408,7 +2514,9 @@ window.addEventListener("keyup", (event) => {
     keys.delete(event.code);
 });
 
-window.addEventListener("pointerdown", wakePlayer);
+window.addEventListener("pointerdown", (event) => {
+    if (!event.target.closest("#chat")) wakePlayer();
+});
 
 window.addEventListener("blur", () => {
     keys.clear();
