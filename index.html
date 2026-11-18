@@ -1549,7 +1549,7 @@ async function cutTree(tree) {
     tree.cutting = true;
     player.cutting = true;
     player.cutStartedAt = performance.now();
-    shakeElement(tree)
+    shakeElement(tree, 5, 10, 15)
 
     try {
         await sleep(AXE_DURATION - AXE_DURATION / 2.5 + 100);
