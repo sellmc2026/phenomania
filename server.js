@@ -8,7 +8,7 @@ const { DatabaseSync } = require("node:sqlite");
 // configuration
 
 const PORT = Number(process.env.PORT || 3000);
-const HOST = process.env.HOST || "127.0.0.1";
+const HOST = process.env.HOST || "0.0.0.0";
 
 const APP_ORIGIN = process.env.APP_ORIGIN
     ? new URL(process.env.APP_ORIGIN).origin
