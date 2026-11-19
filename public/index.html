@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phenomania | Welcome</title>
+<style>
+    :root {
+        --ink: #42334f;
+        --muted: #756582;
+        --purple: #8566a8;
+        --purple-dark: #624680;
+        --edge: #a994b9;
+        --paper: #fbf6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+        background: linear-gradient(#241b3a22, #241b3a44),
+            url("login/login-background.png") center / cover no-repeat fixed, #c9b7de;
+        color: var(--ink);
+        font-family: ui-monospace, "Courier New", monospace;
+    }
+    .login-panel {
+        width: min(100%, 410px);
+        padding: 27px;
+        background: var(--paper);
+        border: 3px solid var(--purple-dark);
+        box-shadow: 0 0 0 4px #e8d9f4, 0 0 0 7px #624680, 0 9px 0 7px #2d204b55;
+    }
+    .brand { text-align: center; margin-bottom: 23px; }
+    h1 { font-size: clamp(25px, 7vw, 32px); margin: 0 0 7px; letter-spacing: -1.4px; }
+    .subtitle { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 22px; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .tab {
+        color: var(--purple-dark); background: #ebe0f3; border: 2px solid #c8b5d8;
+        padding: 10px 4px; font-size: 13px; font-weight: bold;
+    }
+    .tab[aria-pressed="true"] { color: white; background: var(--purple); border-color: var(--purple-dark); }
+    label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 7px; }
+    .field { margin-bottom: 16px; }
+    .field input {
+        width: 100%; padding: 11px 12px; border: 2px solid var(--edge);
+        background: #fff; color: var(--ink); border-radius: 0; font-size: 15px;
+    }
+    input::placeholder { color: #887d92; }
+    input:focus, button:focus-visible { outline: 3px solid #a989d0; outline-offset: 2px; }
+    .submit {
+        display: block; width: 100%; padding: 12px; margin-top: 21px;
+        background: var(--purple); color: #fff; border: 2px solid var(--purple-dark);
+        box-shadow: 0 4px 0 var(--purple-dark); font-weight: bold;
+    }
+    .submit:hover:not(:disabled) { background: #755298; }
+    .submit:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--purple-dark); }
+    button:disabled { opacity: .65; cursor: wait; }
+    .hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 5px; }
+    .message { margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: #9a3653; }
+    .message:empty { display: none; }
+    .footer { font-size: 11px; color: var(--muted); margin: 20px 0 0; text-align: center; line-height: 1.5; }
+    [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main class="login-panel">
+    <header class="brand">
+        <h1>Phenomania</h1>
+        <p class="subtitle" id="subtitle">Welcome back, adventurer!</p>
+    </header>
+    <div class="tabs" role="group" aria-label="Account options">
+        <button type="button" class="tab" id="loginTab" aria-pressed="true">Log in</button>
+        <button type="button" class="tab" id="registerTab" aria-pressed="false">Create account</button>
+    </div>
+    <form id="loginForm">
+        <div class="field">
+            <label for="identifier">Username or email</label>
+            <input id="identifier" name="identifier" autocomplete="username" placeholder="Username or email" maxlength="254" required>
+        </div>
+        <div class="field">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your password" maxlength="128" required>
+        </div>
+        <button class="submit" type="submit">Log in</button>
+    </form>
+    <form id="registerForm" hidden>
+        <div class="field">
+            <label for="newUsername">Username</label>
+            <input id="newUsername" name="username" autocomplete="username" placeholder="Choose a username" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" required>
+            <div class="hint">3–20 letters, numbers or underscores</div>
+        </div>
+        <div class="field">
+            <label for="email">Email address</label>
+            <input id="email" type="email" autocomplete="email" placeholder="Your email address" maxlength="254" required>
+        </div>
+        <div class="field">
+            <label for="newPassword">Password</label>
+            <input id="newPassword" type="password" autocomplete="new-password" placeholder="Choose a password" minlength="12" maxlength="128" required>
+            <div class="hint">At least 12 characters</div>
+        </div>
+        <div class="field">
+            <label for="confirmPassword">Confirm password</label>
+            <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Repeat your password" minlength="12" maxlength="128" required>
+        </div>
+        <button class="submit" type="submit">Create account</button>
+    </form>
+    <p class="message" id="message" role="alert" aria-live="polite"></p>
+    <p class="footer">Your adventure awaits.</p>
+</main>
+<script>
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const loginTab = document.getElementById("loginTab");
+    const registerTab = document.getElementById("registerTab");
+    const message = document.getElementById("message");
+    const subtitle = document.getElementById("subtitle");
+    let busy = false;
+
+    function showForm(registering) {
+        if (busy) return;
+        loginForm.hidden = registering;
+        registerForm.hidden = !registering;
+        loginTab.setAttribute("aria-pressed", String(!registering));
+        registerTab.setAttribute("aria-pressed", String(registering));
+        subtitle.textContent = registering ? "A new adventure begins!" : "Welcome back, adventurer!";
+        message.textContent = "";
+    }
+
+    loginTab.addEventListener("click", () => showForm(false));
+    registerTab.addEventListener("click", () => showForm(true));
+
+    async function authenticate(endpoint, data, form) {
+        if (busy) return;
+        busy = true;
+        const submit = form.querySelector('button[type="submit"]');
+        submit.disabled = true;
+        message.textContent = "";
+        try {
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Something went wrong.");
+            window.location.replace("phenomania.html");
+        } catch (error) {
+            message.textContent = error instanceof SyntaxError || error instanceof TypeError
+                ? "Could not reach the account server. Please try again."
+                : error.message;
+        } finally {
+            busy = false;
+            submit.disabled = false;
+        }
+    }
+
+    loginForm.addEventListener("submit", event => {
+        event.preventDefault();
+        authenticate("/api/login", {
+            identifier: document.getElementById("identifier").value.trim(),
+            password: document.getElementById("loginPassword").value
+        }, loginForm);
+    });
+
+    registerForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const password = document.getElementById("newPassword").value;
+        if (password !== document.getElementById("confirmPassword").value) {
+            message.textContent = "Your passwords do not match.";
+            return;
+        }
+        authenticate("/api/register", {
+            username: document.getElementById("newUsername").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password
+        }, registerForm);
+    });
+</script>
+</body>
+</html>
