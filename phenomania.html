@@ -337,6 +337,52 @@ canvas {
     inset: 0;
 }
 
+#profileMenu {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+    font: bold 13px ui-monospace, "Courier New", monospace;
+    color: #42334f;
+}
+#profileMenu [hidden] { display: none !important; }
+#profileMenu button {
+    font: inherit;
+    cursor: pointer;
+    border: 2px solid #624680;
+    border-radius: 0;
+}
+#profileButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eee1f8;
+    color: #42334f;
+    padding: 9px 12px;
+    box-shadow: 0 3px 0 #624680;
+}
+#profileIcon { width: 19px; height: 19px; fill: currentColor; }
+#profileDropdown {
+    position: absolute;
+    top: calc(100% + 9px);
+    right: 0;
+    min-width: 180px;
+    padding: 12px;
+    border: 2px solid #624680;
+    box-shadow: 0 3px 0 #624680;
+    background: #fbf6ff;
+}
+#profileUsername { display: block; margin-bottom: 11px; overflow-wrap: anywhere; }
+#logoutButton {
+    width: 100%; padding: 8px; background: #e6c9d5; color: #753b55;
+    border-color: #a76581 !important;
+}
+#logoutButton:hover:not(:disabled) { background: #dcb3c6; }
+#profileMenu button:focus-visible { outline: 3px solid #a989d0; outline-offset: 2px; }
+#profileMenu button:disabled { opacity: .6; cursor: wait; }
+#profileError { font-size: 11px; margin: 8px 0 0; }
+#profileError:empty { display: none; }
+
 /* chat */
 #chat {
     position: fixed;
@@ -429,6 +475,21 @@ canvas {
 <body>
 
 <canvas id="game"></canvas>
+
+<div id="profileMenu" hidden>
+    <button id="profileButton" type="button" aria-expanded="false" aria-controls="profileDropdown">
+        <svg id="profileIcon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <path d="M5 1h6v1h1v6h-1v1H5V8H4V2h1zM4 10h8v1h2v4H2v-4h2z"/>
+        </svg>
+        <span id="profileButtonName">Profile</span>
+        <span aria-hidden="true">▾</span>
+    </button>
+    <div id="profileDropdown" hidden>
+        <span id="profileUsername"></span>
+        <button id="logoutButton" type="button">Log out</button>
+        <p id="profileError" role="alert"></p>
+    </div>
+</div>
 
 <!-- chat -->
 <div id="chat">
@@ -2556,6 +2617,86 @@ function drawHitboxes(cameraX, cameraY) {
 
     ctx.restore();
 }
+window.username = null;
+    window.profileReady = (async () => {
+        const menu = document.getElementById("profileMenu");
+        const button = document.getElementById("profileButton");
+        const dropdown = document.getElementById("profileDropdown");
+        const logoutButton = document.getElementById("logoutButton");
+        const errorMessage = document.getElementById("profileError");
+        let expiryTimer;
+
+        function closeMenu() {
+            dropdown.hidden = true;
+            button.setAttribute("aria-expanded", "false");
+        }
+        function goToLogin() {
+            window.username = null;
+            window.location.replace("index.html");
+        }
+        async function checkSession() {
+            const response = await fetch("/api/session", { credentials: "same-origin", cache: "no-store" });
+            if (response.status === 401) {
+                goToLogin();
+                return null;
+            }
+            if (!response.ok) throw new Error("Could not load your profile.");
+            const session = await response.json();
+            window.username = session.username;
+            document.getElementById("profileButtonName").textContent = window.username;
+            document.getElementById("profileUsername").textContent = "Signed in as " + window.username;
+            errorMessage.textContent = "";
+            menu.hidden = false;
+            clearTimeout(expiryTimer);
+            expiryTimer = setTimeout(() => {
+                // Ask the server at expiry in case another tab logged in again.
+                checkSession().catch(goToLogin);
+            }, Math.max(1000, session.expiresAt - Date.now() + 1000));
+            return window.username;
+        }
+
+        button.addEventListener("click", () => {
+            dropdown.hidden = !dropdown.hidden;
+            button.setAttribute("aria-expanded", String(!dropdown.hidden));
+        });
+        document.addEventListener("click", event => {
+            if (!menu.contains(event.target)) closeMenu();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.code === "Escape" && !dropdown.hidden) closeMenu();
+        });
+        // Prevent profile clicks from being sent to canvas input handlers that use bubbling.
+        for (const name of ["pointerdown", "pointerup", "mousedown", "mouseup", "click", "contextmenu"]) {
+            menu.addEventListener(name, event => event.stopPropagation());
+        }
+        logoutButton.addEventListener("click", async () => {
+            logoutButton.disabled = true;
+            errorMessage.textContent = "";
+            try {
+                const response = await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+                if (!response.ok) throw new Error();
+                goToLogin();
+            } catch {
+                errorMessage.textContent = "Could not log out. Try again.";
+                logoutButton.disabled = false;
+            }
+        });
+        window.addEventListener("focus", () => checkSession().catch(console.error));
+        window.addEventListener("pageshow", event => {
+            if (event.persisted) checkSession().catch(console.error);
+        });
+
+        try {
+            return await checkSession();
+        } catch (error) {
+            console.error(error);
+            menu.hidden = false;
+            dropdown.hidden = false;
+            button.setAttribute("aria-expanded", "true");
+            errorMessage.textContent = "Could not load your account. Refresh to retry.";
+            return null;
+        }
+    })();
 </script>
 </body>
 </html>
