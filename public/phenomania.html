@@ -779,9 +779,7 @@ function updateChatStatus(status) {
     chatSend.disabled = !chatConnected || chatSending;
 }
 
-sender.addEventListener("click", () => {
-    
-});
+
 
 function connectGlobalChat() {
     if (chatStream) return;
@@ -853,30 +851,28 @@ function isTypingInChat() {
     return document.activeElement === chatInput;
 }
 
-let nameBTN = 
 function addChatMessage(message, name) {
     const line = document.createElement("div");
     line.className = "chat-message";
+
     const sender = document.createElement("span");
     sender.className = "chat-name";
     sender.textContent = name + " » ";
+
+    sender.addEventListener("click", () => {
+        openPlayerProfile(name);
+    });
+
     line.append(sender, document.createTextNode(message));
     chatMessages.appendChild(line);
-    while (chatMessages.childElementCount > 150) chatMessages.firstElementChild.remove();
+
+    while (chatMessages.childElementCount > 150) {
+        chatMessages.firstElementChild.remove();
+    }
+
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
-
-chatInput.addEventListener("focus", () => {
-    keys.clear();
-    player.moving = false;
-});
-chatInput.addEventListener("keydown", event => {
-    event.stopPropagation();
-    if (event.code === "Escape") {
-        event.preventDefault();
-        chatInput.blur();
-    }
-});
+    
 chatForm.addEventListener("submit", async event => {
     event.preventDefault();
     const original = chatInput.value;
