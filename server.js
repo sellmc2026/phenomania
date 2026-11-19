@@ -437,6 +437,184 @@ async function login(req, res, body) {
     );
 }
 
+// global chat
+
+const CHAT_MAX_LENGTH = 250;
+const CHAT_COOLDOWN = 750;
+const CHAT_MAX_CONNECTIONS = 1000;
+const CHAT_MAX_CONNECTIONS_PER_USER = 8;
+
+const chatClients = new Set();
+const chatLastSent = new Map();
+
+function closeChatClient(client, expired = false) {
+    chatClients.delete(client);
+
+    if (client.res.destroyed || client.res.writableEnded) return;
+
+    if (expired) {
+        client.res.write("event: session-expired\ndata: {}\n\n");
+    }
+
+    client.res.end();
+}
+
+function chatClientValid(client) {
+    const user = getSession(client.req);
+
+    return user && user.id === client.userId;
+}
+
+function writeChatEvent(client, event) {
+    if (client.res.destroyed || client.res.writableEnded) {
+        chatClients.delete(client);
+        return;
+    }
+
+    if (!client.res.write(event)) {
+        chatClients.delete(client);
+        client.res.destroy();
+    }
+}
+
+function openChatStream(req, res) {
+    const user = getSession(req);
+
+    if (!user) {
+        return json(res, 401, {
+            error: "Not logged in."
+        });
+    }
+
+    let connections = 0;
+
+    for (const client of chatClients) {
+        if (client.userId === user.id) connections++;
+    }
+
+    if (
+        chatClients.size >= CHAT_MAX_CONNECTIONS ||
+        connections >= CHAT_MAX_CONNECTIONS_PER_USER
+    ) {
+        return json(res, 429, {
+            error: "Too many chat connections."
+        });
+    }
+
+    res.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no"
+    });
+
+    res.flushHeaders();
+
+    const client = {
+        req,
+        res,
+        userId: user.id
+    };
+
+    chatClients.add(client);
+
+    res.on("close", () => chatClients.delete(client));
+    res.on("error", () => chatClients.delete(client));
+
+    writeChatEvent(client, "retry: 2000\n: connected\n\n");
+}
+
+async function sendChatMessage(req, res) {
+    if (!safeOrigin(req)) {
+        return json(res, 403, {
+            error: "Invalid request origin."
+        });
+    }
+
+    if (!getSession(req)) {
+        return json(res, 401, {
+            error: "Not logged in."
+        });
+    }
+
+    if (
+        !(req.headers["content-type"] || "")
+            .toLowerCase()
+            .startsWith("application/json")
+    ) {
+        return json(res, 415, {
+            error: "JSON required."
+        });
+    }
+
+    const body = await readJson(req);
+    const message = string(body.message).trim();
+
+    const user = getSession(req);
+
+    if (!user) {
+        return json(res, 401, {
+            error: "Not logged in."
+        });
+    }
+
+    if (
+        !message ||
+        message.length > CHAT_MAX_LENGTH ||
+        /[\r\n\x00-\x1f\x7f]/.test(message)
+    ) {
+        return json(res, 400, {
+            error: "Enter a message of 1–250 characters on one line."
+        });
+    }
+
+    const now = Date.now();
+
+    if (now - (chatLastSent.get(user.id) || 0) < CHAT_COOLDOWN) {
+        return json(res, 429, {
+            error: "You are sending messages too quickly."
+        });
+    }
+
+    chatLastSent.set(user.id, now);
+
+    const event = `data: ${JSON.stringify({
+        username: user.username,
+        message
+    })}\n\n`;
+
+    for (const client of chatClients) {
+        if (!chatClientValid(client)) {
+            closeChatClient(client, true);
+        } else {
+            writeChatEvent(client, event);
+        }
+    }
+
+    return json(res, 200, {
+        success: true
+    });
+}
+
+// keep chat connections alive
+
+setInterval(() => {
+    const now = Date.now();
+
+    for (const [id, sentAt] of chatLastSent) {
+        if (now - sentAt >= CHAT_COOLDOWN) {
+            chatLastSent.delete(id);
+        }
+    }
+
+    for (const client of chatClients) {
+        if (!chatClientValid(client)) {
+            closeChatClient(client, true);
+        } else {
+            writeChatEvent(client, ": heartbeat\n\n");
+        }
+    }
+}, 15000).unref();
+
 // file types
 
 const types = {
@@ -560,9 +738,44 @@ const server = http.createServer(async (req, res) => {
             .normalize(pathname.replace(/\\/g, "/"))
             .replace(/\/$/, "") || "/";
 
-        // account api
+        // api
 
         if (pathname.startsWith("/api/")) {
+
+            // receive global chat messages
+
+            if (pathname === "/api/chat/stream") {
+                if (req.method !== "GET") {
+                    return json(res, 405, {
+                        error: "Method not allowed."
+                    });
+                }
+
+                if (
+                    req.headers["sec-fetch-site"] === "cross-site" ||
+                    (req.headers.origin && !safeOrigin(req))
+                ) {
+                    return json(res, 403, {
+                        error: "Invalid request origin."
+                    });
+                }
+
+                return openChatStream(req, res);
+            }
+
+            // send global chat messages
+
+            if (pathname === "/api/chat/messages") {
+                if (req.method !== "POST") {
+                    return json(res, 405, {
+                        error: "Method not allowed."
+                    });
+                }
+
+                return await sendChatMessage(req, res);
+            }
+
+            // account session
 
             if (
                 pathname === "/api/session" &&
@@ -608,6 +821,12 @@ const server = http.createServer(async (req, res) => {
 
             if (pathname === "/api/logout") {
                 revokeSession(req);
+
+                for (const client of chatClients) {
+                    if (!chatClientValid(client)) {
+                        closeChatClient(client, true);
+                    }
+                }
 
                 res.setHeader(
                     "Set-Cookie",
