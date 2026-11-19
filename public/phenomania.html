@@ -803,8 +803,8 @@ function addChatMessage(message, name) {
     const line = document.createElement("div");
     line.className = "chat-message";
     const sender = document.createElement("span");
-    sender.className = "{$window.username}";
-    sender.textContent = name + ": ";
+    sender.className = "chat-name";
+    sender.textContent = name + "» ";
     line.append(sender, document.createTextNode(message));
     chatMessages.appendChild(line);
     while (chatMessages.childElementCount > 150) chatMessages.firstElementChild.remove();
