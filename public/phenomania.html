@@ -458,7 +458,8 @@ canvas {
     font-weight: 800;
     cursor: pointer;
 }
-#chat-send:hover { background: #a06bc9; }
+#chat-send:hover:not(:disabled) { background: #a06bc9; }
+#chat-send:disabled { opacity: 0.55; cursor: default; }
 
 @media (max-width: 390px) {
     .inventory-grid { gap: 3px; padding: 5px; }
@@ -716,19 +717,97 @@ const keys = new Set();
 const chatInput = document.getElementById("chat-input");
 const chatForm = document.getElementById("chatbox");
 const chatMessages = document.getElementById("chat-messages");
+const chatHint = document.getElementById("chat-hint");
+const chatSend = document.getElementById("chat-send");
+let chatStream = null;
+let chatConnected = false;
+let chatSending = false;
+let chatCheckingSession = false;
+
+function updateChatStatus(status) {
+    chatHint.textContent = status;
+    chatSend.disabled = !chatConnected || chatSending;
+}
+
+function connectGlobalChat() {
+    if (chatStream) return;
+    chatConnected = false;
+    updateChatStatus("Connecting...");
+    const stream = new EventSource("/api/chat/stream");
+    chatStream = stream;
+
+    stream.onopen = () => {
+        if (chatStream !== stream) return;
+        chatConnected = true;
+        updateChatStatus("Connected");
+    };
+
+    stream.onmessage = event => {
+        if (chatStream !== stream) return;
+        try {
+            const { username, message } = JSON.parse(event.data);
+            if (typeof username === "string" && typeof message === "string") {
+                addChatMessage(message, username);
+            }
+        } catch (error) {
+            console.error("Invalid chat message:", error);
+        }
+    };
+
+    stream.addEventListener("session-expired", () => {
+        if (chatStream !== stream) return;
+        disconnectGlobalChat();
+        window.location.replace("/index.html");
+    });
+
+    stream.onerror = async () => {
+        if (chatStream !== stream) return;
+        chatConnected = false;
+        updateChatStatus("Reconnecting...");
+        if (chatCheckingSession) return;
+        chatCheckingSession = true;
+        try {
+            const response = await fetch("/api/session", { cache: "no-store" });
+            if (response.status === 401 && chatStream === stream) {
+                disconnectGlobalChat();
+                window.location.replace("/index.html");
+            }
+        } catch {
+            // EventSource automatically retries interrupted connections
+        } finally {
+            chatCheckingSession = false;
+            if (chatStream === stream && stream.readyState === EventSource.CLOSED) {
+                disconnectGlobalChat();
+                setTimeout(() => {
+                    if (!chatStream && window.username) connectGlobalChat();
+                }, 3000);
+            }
+        }
+    };
+}
+
+function disconnectGlobalChat() {
+    chatStream?.close();
+    chatStream = null;
+    chatConnected = false;
+    updateChatStatus("Disconnected");
+}
+
+updateChatStatus("Connecting...");
 
 function isTypingInChat() {
     return document.activeElement === chatInput;
 }
 
-function addChatMessage(message, name = "You") {
+function addChatMessage(message, name) {
     const line = document.createElement("div");
     line.className = "chat-message";
     const sender = document.createElement("span");
-    sender.className = "chat-name";
+    sender.className = "{$window.username}";
     sender.textContent = name + ": ";
     line.append(sender, document.createTextNode(message));
     chatMessages.appendChild(line);
+    while (chatMessages.childElementCount > 150) chatMessages.firstElementChild.remove();
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
@@ -743,15 +822,38 @@ chatInput.addEventListener("keydown", event => {
         chatInput.blur();
     }
 });
-chatForm.addEventListener("submit", event => {
+chatForm.addEventListener("submit", async event => {
     event.preventDefault();
-    const message = chatInput.value.trim();
-    if (message) {
-        addChatMessage(message);
-        chatInput.value = "";
-        // Replace the local message display with server sending when multiplayer is added
+    const original = chatInput.value;
+    const message = original.trim();
+    if (!message || !chatConnected || chatSending) return;
+
+    chatSending = true;
+    updateChatStatus("Sending...");
+    try {
+        const response = await fetch("/api/chat/messages", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
+        if (response.status === 401) {
+            disconnectGlobalChat();
+            window.location.replace("/index.html");
+            return;
+        }
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || "Could not send message.");
+        }
+        // The server broadcasts the message back to us too
+        if (chatInput.value === original) chatInput.value = "";
+    } catch (error) {
+        showMessage(error.message || "Could not send message.");
+    } finally {
+        chatSending = false;
+        updateChatStatus(chatConnected ? "Connected" : "Disconnected");
     }
-    
 });
 
 const ui = {
@@ -2632,6 +2734,7 @@ window.username = null;
         }
         function goToLogin() {
             window.username = null;
+            disconnectGlobalChat();
             window.location.replace("index.html");
         }
         async function checkSession() {
@@ -2643,6 +2746,7 @@ window.username = null;
             if (!response.ok) throw new Error("Could not load your profile.");
             const session = await response.json();
             window.username = session.username;
+            connectGlobalChat();
             document.getElementById("profileButtonName").textContent = window.username;
             document.getElementById("profileUsername").textContent = "Signed in as " + window.username;
             errorMessage.textContent = "";
