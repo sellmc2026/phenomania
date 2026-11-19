@@ -328,9 +328,48 @@ canvas {
     cursor: pointer;
 }
 
+.chat-name {
+    cursor: pointer;
+}
+
+.chat-name:hover {
+    text-decoration: underline;
+}
+
 .item-menu button:hover { background: #fef4ff; }
 .item-menu button.danger { border-color: #af647b; color: #853448; }
 .item-menu button.confirm { background: #ffe2dd; }
+
+#playerProfile {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    padding: 20px;
+    background: #eee6fa;
+    border: 3px solid #927bb5;
+    border-radius: 10px;
+    color: #45365c;
+    text-align: center;
+    z-index: 9999;
+}
+
+#playerProfile button {
+    display: block;
+    margin: 8px auto;
+    cursor: pointer;
+}
+
+#closeProfile {
+    position: absolute;
+    top: 0;
+    right: 10px;
+}
+
+.chat-name {
+    cursor: pointer;
+}
 
 #gameContainer {
     position: fixed;
@@ -551,16 +590,27 @@ canvas {
     </div>
 </div>
 
+<div id="playerProfile" hidden>
+    <button id="closeProfile" onclick="closePlayerProfile()">×</button>
+    <h2 id="profileUsername"></h2>
+    <button>Send Friend Request</button>
+    <button>Send Message</button>
+    <button>Request Trade</button>
+</div>
+
 <script>
 "use strict";
 
 
+function openPlayerProfile(name) {
+    document.getElementById("profileUsername").textContent = name;
+    document.getElementById("playerProfile").hidden = false;
+}
 
-window.give = function(itemId, amount = 1) {
-    addInventoryItem(itemId, amount);
-    console.log(`Gave ${amount}x ${itemId}`);
-};
-    
+function closePlayerProfile() {
+    document.getElementById("playerProfile").hidden = true;
+}
+
 // settings
 let freezePlayer = false;
 
@@ -729,6 +779,10 @@ function updateChatStatus(status) {
     chatSend.disabled = !chatConnected || chatSending;
 }
 
+sender.addEventListener("click", () => {
+    
+});
+
 function connectGlobalChat() {
     if (chatStream) return;
     chatConnected = false;
@@ -799,12 +853,13 @@ function isTypingInChat() {
     return document.activeElement === chatInput;
 }
 
+let nameBTN = 
 function addChatMessage(message, name) {
     const line = document.createElement("div");
     line.className = "chat-message";
     const sender = document.createElement("span");
     sender.className = "chat-name";
-    sender.textContent = name + "» ";
+    sender.textContent = name + " » ";
     line.append(sender, document.createTextNode(message));
     chatMessages.appendChild(line);
     while (chatMessages.childElementCount > 150) chatMessages.firstElementChild.remove();
