@@ -695,7 +695,7 @@ chatForm.addEventListener("submit", event => {
         chatInput.value = "";
         // Replace the local message display with server sending when multiplayer is added
     }
-    chatInput.blur();
+    
 });
 
 const ui = {
@@ -2453,7 +2453,7 @@ window.addEventListener("keydown", (event) => {
 
     if (inventoryOpen) return;
 
-    if (event.code === "KeyZ" || event.code === "Enter") {
+    if (event.code === "KeyZ" || event.code === "Space") {
         event.preventDefault();
     
         keys.add(event.code);
