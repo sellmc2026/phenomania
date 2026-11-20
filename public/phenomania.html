@@ -376,15 +376,17 @@ canvas {
     inset: 0;
 }
 
-#crafting-button {
-    position: fixed;
+#crafting-button span {
+    position: relative;
+    top: 5px;
     left: calc(50% + 316px);
     bottom: 10px;
     width: 64px;
     height: 64px;
     z-index: 10;
-    background: #8659aa;
+    background-color: rgba(100, 70, 140, 0.5);
     border: 1px solid #250E34;
+    color: #D9FDA6;
 }
     
 
@@ -610,7 +612,10 @@ canvas {
     <button>Request Trade</button>
 </div>
 
-<button id="crafting-button">Craft</button>
+<button id="crafting-button">
+    <span>Craft</span>
+    <img src="crafting-button.png">
+</button>
 
 <script>
 "use strict";
