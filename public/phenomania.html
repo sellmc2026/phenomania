@@ -378,15 +378,32 @@ canvas {
 
 #crafting-button {
     position: fixed;
-    top: 5px;
     left: calc(50% + 316px);
     bottom: 10px;
     width: 64px;
     height: 64px;
-    z-index: 10;
+    z-index: 11;
     background-color: rgba(100, 70, 140, 0.5);
     border: 1px solid #250E34;
     color: #D9FDA6;
+    cursor: pointer;
+}
+
+#crafting-button span {
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#crafting-button img {
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
 }
     
 
