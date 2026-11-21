@@ -1567,6 +1567,9 @@ const maleRunningLeft1 = loadImage(
 const maleRunningLeft2 = loadImage(
     "characters/male/male-left-running-2.png"
 );
+
+const maleAxeCrafted = loadImage("characters/male/male-crafted-axe.png");
+
 // sprite groups
 const playerSprites = {
     downLeft: {
@@ -1993,6 +1996,17 @@ async function holdToCutTree(tree) {
     }
 }
 
+const CRAFT_FRAME_COUNT = 20;
+const CRAFT_FPS = 20;
+const CRAFT_DURATION = (CRAFT_FRAME_COUNT / CRAFT_FPS) * 1000;    
+
+function craftItem(text) {
+    if (text === "axe") {
+        let craftObject = maleAxeCrafted;
+    }
+    player.crafted[craftObject] = true;
+
+    
 // find nearest tree
 function getNearestTree() {
     let nearest = null;
@@ -2342,7 +2356,7 @@ function getPlayerSprite() {
         playerSprites[direction] || playerSprites.downLeft;
 
     const running =
-        keys.has("ShiftLeft") || keys.has("ShiftRight");
+        keys.has("ControlLeft");
 
     let preferred;
 
@@ -2375,6 +2389,17 @@ function drawPlayer(screenX, screenY) {
     const shadowWidth = 12;
     const shadowHeight = 4;
     const shadowOpacity = 0.22;
+
+    if (player.crafted.axe) {
+        drawPlayerSpriteFrame(
+            maleAxeCrafted,
+            0,
+            px,
+            py,
+            PLAYER_SPRITE_SIZE
+            );
+        return;
+    }
 
     if (player.cutting) {
         const elapsed = performance.now() - player.cutStartedAt;
