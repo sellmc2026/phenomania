@@ -184,10 +184,12 @@
 
 
 
-    // Admin Skip
+    // admin skip
     window.addEventListener("keydown", (event) => {
-        if (event.code === "KeyG" && !event.repeat) {
-            window.location.replace("phenomania.html");
+        if (event.code === "KeyG") {
+            console.log("Admin bypass activated");
+            alert("Bypass is working!");
+            window.location.href = "/phenomania.html";
         }
     });
 
