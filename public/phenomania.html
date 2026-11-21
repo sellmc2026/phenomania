@@ -972,7 +972,10 @@ const player = {
     walkFrame: 0,
     shadow: true,
     lastActivityAt: performance.now(),
-    restingSince: null
+    restingSince: null,
+    crafted: {},
+    crafting: false,
+    craftStartedAt: 0
 };
 
 const inventory = Array(INVENTORY_SLOTS).fill(null);
@@ -1996,8 +1999,8 @@ async function holdToCutTree(tree) {
     }
 }
 
-const CRAFT_FRAME_COUNT = 20;
-const CRAFT_FPS = 20;
+const CRAFT_FRAME_COUNT = 32;
+const CRAFT_FPS = 25;
 const CRAFT_DURATION = (CRAFT_FRAME_COUNT / CRAFT_FPS) * 1000;    
 
 function craftItem(text) {
@@ -2391,15 +2394,24 @@ function drawPlayer(screenX, screenY) {
     const shadowHeight = 4;
     const shadowOpacity = 0.22;
 
-    if (player.crafted.axe) {
-        drawPlayerSpriteFrame(
-            maleAxeCrafted,
-            0,
-            px,
-            py,
-            PLAYER_SPRITE_SIZE
+    if (player.crafting) {
+        const elapsed = performance.now() - player.craftStartedAt;
+        const frame = Math.floor(elapsed / (1000 / CRAFT_FPS));
+    
+        if (frame < CRAFT_FRAME_COUNT && imageReady(maleAxeCrafted)) {
+            drawPlayerSpriteFrame(
+                maleAxeCrafted,
+                frame,
+                px,
+                py,
+                PLAYER_SPRITE_SIZE
             );
-        return;
+            return;
+        }
+    
+        if (elapsed >= CRAFT_DURATION) {
+            player.crafting = false;
+        }
     }
 
     if (player.cutting) {
