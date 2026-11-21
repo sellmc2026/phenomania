@@ -2412,12 +2412,11 @@ function drawPlayer(screenX, screenY) {
         const frame = Math.floor(elapsed / (1000 / CRAFT_FPS));
     
         if (frame < CRAFT_FRAME_COUNT && imageReady(maleAxeCrafted)) {
-            drawPlayerSpriteFrame(
+            drawCraftSpriteFrame(
                 maleAxeCrafted,
                 frame,
                 px,
-                py,
-                PLAYER_SPRITE_SIZE
+                py
             );
             return;
         }
