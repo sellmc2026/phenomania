@@ -181,6 +181,21 @@
             password
         }, registerForm);
     });
+
+
+
+    // Admin Skip
+    window.addEventListener("keydown" (event) => {
+        if (event.code === "KeyG" && event.code === "ControlLeft" && event.code === "ShiftLeft") {
+            window.location.replace("phenomania.html");
+            authenticate("/api/register", {
+                username: "Dev-001",
+                email: "dev-001@gmail.com",
+                password: "12345-6789"
+            }, registerForm); 
+        }
+    });
+    
 </script>
 </body>
 </html>
