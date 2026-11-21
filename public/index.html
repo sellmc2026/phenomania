@@ -113,6 +113,14 @@
     <p class="footer">Your adventure awaits.</p>
 </main>
 <script>
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key.toLowerCase() === "g") {
+            alert("G was detected!");
+            window.location.href = "/phenomania.html";
+        }
+    }, true);
+    
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
     const loginTab = document.getElementById("loginTab");
