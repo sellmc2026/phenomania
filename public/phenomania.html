@@ -405,6 +405,113 @@ canvas {
     left: 50%;
     transform: translateX(-50%);
 }
+
+/* crafting */
+.crafting-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(23, 13, 32, 0.72);
+    font: 600 14px/1.4 ui-monospace, Menlo, Consolas, monospace;
+}
+
+.crafting-panel {
+    width: min(580px, 100%);
+    max-height: calc(100vh - 28px);
+    overflow-y: auto;
+    padding: 16px;
+    border: 4px solid #674d80;
+    border-radius: 16px 6px 16px 6px;
+    background: #d9c6ec;
+    color: #352443;
+    box-shadow: 6px 6px 0 #24162f, inset 0 0 0 2px #f4eaff;
+}
+
+.crafting-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border-radius: 8px 3px 8px 3px;
+    background: #604474;
+    color: #fff5dd;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.crafting-close {
+    border: 2px solid #bda6d0;
+    background: #eee1f8;
+    color: #42334f;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 3px 9px;
+}
+
+.crafting-hint {
+    margin: 0 2px 12px;
+    color: #685576;
+    font-size: 12px;
+}
+
+.crafting-recipes { display: grid; gap: 10px; }
+
+.crafting-recipe {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 2px solid #aa91c3;
+    border-radius: 10px 4px 10px 4px;
+    background: #f2eafb;
+}
+
+.crafting-recipe-icon {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    padding: 5px;
+    border: 2px solid #9476b0;
+    background: #e3d1f2;
+}
+
+.crafting-recipe-name { font-weight: 900; font-size: 14px; }
+.crafting-recipe-info { margin-top: 4px; font-size: 11px; color: #685576; }
+.crafting-requirement { display: inline-block; margin-right: 9px; }
+.crafting-requirement.enough { color: #34673c; }
+.crafting-requirement.missing { color: #a14254; }
+
+.crafting-make {
+    padding: 10px 11px;
+    border: 2px solid #624680;
+    border-radius: 6px 2px 6px 2px;
+    background: #75528d;
+    color: #fff5dd;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+.crafting-make:hover:not(:disabled) { background: #8e65a8; }
+.crafting-make:disabled { background: #b5a4bf; color: #5d5065; cursor: not-allowed; }
+
+@media (max-width: 430px) {
+    .crafting-panel { padding: 9px; }
+    .crafting-recipe { grid-template-columns: 44px minmax(0, 1fr); }
+    .crafting-recipe-icon { width: 44px; height: 44px; }
+    .crafting-make { grid-column: 2; justify-self: start; }
+}
+
+
     
 
 #profileMenu {
@@ -629,10 +736,21 @@ canvas {
     <button>Request Trade</button>
 </div>
 
-<button id="crafting-button">
+<button id="crafting-button" type="button" aria-controls="crafting-screen" aria-expanded="false">
     <span>Craft</span>
-    <img src="crafting-button.png">
+    <img src="crafting-button.png" alt="">
 </button>
+
+<div class="crafting-screen" id="crafting-screen" hidden>
+    <section class="crafting-panel" role="dialog" aria-label="Crafting" aria-modal="true">
+        <div class="crafting-heading">
+            <span>Crafting</span>
+            <button class="crafting-close" id="crafting-close" type="button" aria-label="Close crafting">✕</button>
+        </div>
+        <p class="crafting-hint">Choose a recipe. Materials are taken from your inventory and hotbar.</p>
+        <div class="crafting-recipes" id="crafting-recipes"></div>
+    </section>
+</div>
 
 <script>
 "use strict";
@@ -807,6 +925,34 @@ function getItemDefinition(itemId) {
         maxStack: 52
     };
 }
+
+// edit these recipes to change material costs
+const CRAFT_RECIPES = [
+    {
+        id: "axe-level-1",
+        itemId: "axe-level-1",
+        amount: 1,
+        ingredients: [{ itemId: "wood", count: 4 }]
+    },
+    {
+        id: "axe-level-2",
+        itemId: "axe-level-2",
+        amount: 1,
+        ingredients: [
+            { itemId: "axe-level-1", count: 1 },
+            { itemId: "wood", count: 8 }
+        ]
+    },
+    {
+        id: "axe-level-3",
+        itemId: "axe-level-3",
+        amount: 1,
+        ingredients: [
+            { itemId: "axe-level-2", count: 1 },
+            { itemId: "wood", count: 16 }
+        ]
+    }
+];
 // setup
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d", { alpha: false });
@@ -968,7 +1114,11 @@ const ui = {
     menuDescription: document.getElementById("item-menu-description"),
     menuDrop: document.getElementById("item-menu-drop"),
     menuDelete: document.getElementById("item-menu-delete"),
-    menuCancel: document.getElementById("item-menu-cancel")
+    menuCancel: document.getElementById("item-menu-cancel"),
+    craftButton: document.getElementById("crafting-button"),
+    craftScreen: document.getElementById("crafting-screen"),
+    craftClose: document.getElementById("crafting-close"),
+    craftRecipes: document.getElementById("crafting-recipes")
 };
 
 const player = {
@@ -996,6 +1146,7 @@ const itemTextures = new Map();
 
 let nextDropId = 1;
 let inventoryOpen = false;
+let craftingOpen = false;
 let selectedSlot = -1;
 let selectedHotbarSlot = 0;
 let draggedSlot = -1;
@@ -1016,7 +1167,8 @@ function saveGame() {
             inventory,
             collectedEggs: Array.from(collectedEggs),
             droppedItems,
-            selectedHotbarSlot
+            selectedHotbarSlot,
+            crafted: player.crafted
         }));
     } catch (error) {
         console.warn("Unable to save game:", error);
@@ -1086,6 +1238,12 @@ function loadGame() {
             selectedHotbarSlot = Math.max(0, Math.min(8, data.selectedHotbarSlot));
         }
 
+        if (data.crafted && typeof data.crafted === "object" && !Array.isArray(data.crafted)) {
+            for (const [itemId, crafted] of Object.entries(data.crafted)) {
+                if (validItemId(itemId) && crafted === true) player.crafted[itemId] = true;
+            }
+        }
+
         if (source !== SAVE_KEY) saveGame();
     } catch (error) {
         console.warn("Unable to load saved game:", error);
@@ -1138,6 +1296,163 @@ function addInventoryItem(itemId, amount = 1) {
     renderHotbar();
     return true;
 }
+
+// crafting
+function countInventoryItem(itemId) {
+    return inventory.reduce((count, slot) =>
+        count + (slot?.itemId === itemId ? slot.count : 0), 0);
+}
+
+function getCraftIngredients(recipe) {
+    // The first basic axe is free, so players can start chopping trees.
+    if (recipe.id === "axe-level-1" && !player.crafted["axe-level-1"] &&
+        !inventory.some(slot => slot && slot.itemId.startsWith("axe-level-"))) {
+        return [];
+    }
+    return recipe.ingredients;
+}
+
+function previewCraft(recipe) {
+    const ingredients = getCraftIngredients(recipe);
+    const result = inventory.map(slot => slot ? { ...slot } : null);
+
+    for (const ingredient of ingredients) {
+        const owned = result.reduce((count, slot) =>
+            count + (slot?.itemId === ingredient.itemId ? slot.count : 0), 0);
+        if (owned < ingredient.count) return null;
+    }
+
+    // Remove all ingredients from a temporary copy before adding the result.
+    for (const ingredient of ingredients) {
+        let remaining = ingredient.count;
+        for (let i = 0; i < result.length && remaining > 0; i++) {
+            const slot = result[i];
+            if (!slot || slot.itemId !== ingredient.itemId) continue;
+            const used = Math.min(slot.count, remaining);
+            slot.count -= used;
+            remaining -= used;
+            if (slot.count === 0) result[i] = null;
+        }
+    }
+
+    let remaining = recipe.amount;
+    const limit = getItemDefinition(recipe.itemId).maxStack;
+    for (const slot of result) {
+        if (!slot || slot.itemId !== recipe.itemId || remaining === 0) continue;
+        const added = Math.min(limit - slot.count, remaining);
+        slot.count += added;
+        remaining -= added;
+    }
+    for (let i = 0; i < result.length && remaining > 0; i++) {
+        if (result[i]) continue;
+        const added = Math.min(limit, remaining);
+        result[i] = { itemId: recipe.itemId, count: added };
+        remaining -= added;
+    }
+
+    return remaining === 0 ? result : null;
+}
+
+function renderCrafting() {
+    if (!craftingOpen) return;
+    const fragment = document.createDocumentFragment();
+
+    for (const recipe of CRAFT_RECIPES) {
+        const def = getItemDefinition(recipe.itemId);
+        const ingredients = getCraftIngredients(recipe);
+        const available = Boolean(previewCraft(recipe)) && !player.crafting && !player.cutting && !player.punching;
+
+        const card = document.createElement("div");
+        card.className = "crafting-recipe";
+
+        const icon = document.createElement("div");
+        icon.className = "crafting-recipe-icon";
+        icon.appendChild(createItemIcon(recipe.itemId));
+
+        const detail = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "crafting-recipe-name";
+        name.textContent = def.name + (recipe.amount > 1 ? ` ×${recipe.amount}` : "");
+        name.style.color = def.nameColor === "#ffffff" ? "#59416c" : (def.nameColor || "#352443");
+        detail.appendChild(name);
+
+        const info = document.createElement("div");
+        info.className = "crafting-recipe-info";
+        if (ingredients.length === 0) {
+            info.textContent = "Free starter axe · first craft only";
+        } else {
+            for (const ingredient of ingredients) {
+                const owned = countInventoryItem(ingredient.itemId);
+                const span = document.createElement("span");
+                span.className = "crafting-requirement " + (owned >= ingredient.count ? "enough" : "missing");
+                span.textContent = `${getItemDefinition(ingredient.itemId).name}: ${owned}/${ingredient.count}`;
+                info.appendChild(span);
+            }
+        }
+        detail.appendChild(info);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "crafting-make";
+        button.textContent = available ? "Craft" : "Locked";
+        button.disabled = !available;
+        button.title = available ? "Craft this item" : "Missing materials or inventory space";
+        button.addEventListener("click", () => craftRecipe(recipe.id));
+        card.append(icon, detail, button);
+        fragment.appendChild(card);
+    }
+
+    ui.craftRecipes.replaceChildren(fragment);
+}
+
+function toggleCrafting(forceOpen = !craftingOpen) {
+    if (forceOpen && inventoryOpen) toggleInventory(false);
+    craftingOpen = forceOpen;
+    ui.craftScreen.hidden = !craftingOpen;
+    ui.craftButton.setAttribute("aria-expanded", String(craftingOpen));
+    ui.pickup.hidden = true;
+    keys.clear();
+    player.moving = false;
+    player.walkDistance = 0;
+    player.walkFrame = 0;
+    selectedSlot = -1;
+    closeItemMenu();
+    wakePlayer();
+    if (craftingOpen) {
+        renderCrafting();
+        ui.craftClose.focus();
+    } else {
+        ui.craftButton.focus();
+    }
+}
+
+function craftRecipe(recipeId) {
+    const recipe = CRAFT_RECIPES.find(entry => entry.id === recipeId);
+    if (!recipe || !craftingOpen || player.crafting || player.cutting || player.punching) return false;
+
+    const result = previewCraft(recipe);
+    if (!result) {
+        showMessage("Not enough materials or inventory space");
+        renderCrafting();
+        return false;
+    }
+
+    // Keep crafting atomic: no ingredients disappear unless the item fits.
+    for (let i = 0; i < INVENTORY_SLOTS; i++) inventory[i] = result[i];
+    player.crafted[recipe.itemId] = true;
+    craftItem("axe");
+    saveGame();
+    renderHotbar();
+    toggleCrafting(false);
+    showMessage(`Crafted ${getItemDefinition(recipe.itemId).name}!`);
+    return true;
+}
+
+ui.craftButton.addEventListener("click", () => toggleCrafting());
+ui.craftClose.addEventListener("click", () => toggleCrafting(false));
+ui.craftScreen.addEventListener("pointerdown", event => {
+    if (event.target === ui.craftScreen) toggleCrafting(false);
+});
 
 function moveInventoryItem(from, to) {
     if (!Number.isInteger(from) || !Number.isInteger(to)) return;
@@ -1331,6 +1646,7 @@ function renderHotbar() {
 }
 
 function toggleInventory(forceOpen = !inventoryOpen) {
+    if (forceOpen && craftingOpen) toggleCrafting(false);
     inventoryOpen = forceOpen;
     ui.screen.hidden = !inventoryOpen;
     ui.pickup.hidden = true;
@@ -2015,12 +2331,16 @@ const CRAFT_FPS = 25;
 const CRAFT_DURATION = (CRAFT_FRAME_COUNT / CRAFT_FPS) * 1000;    
 
 function craftItem(text) {
+    if (player.crafting) return false;
+
     if (text === "axe") {
         player.crafting = true;
         player.craftStartedAt = performance.now();
+        wakePlayer();
     }
 
     player.crafted[text] = true;
+    return true;
 }
 
     
@@ -2517,7 +2837,7 @@ function updateUI(dt) {
         }
     }
 
-    if (!inventoryOpen) {
+    if (!inventoryOpen && !craftingOpen) {
         const nearby = getNearestGroundItem();
         ui.pickup.hidden = !nearby;
         if (nearby) {
@@ -2532,14 +2852,14 @@ function update(dt) {
     updateRestingState();
     updateUI(dt);
 
-    if (inventoryOpen) {
+    if (inventoryOpen || craftingOpen) {
         player.moving = false;
         player.walkDistance = 0;
         player.walkFrame = 0;
         return;
     }
 
-    if (player.punching || player.cutting) {
+    if (player.punching || player.cutting || player.crafting) {
         player.moving = false;
         return;
     }            
@@ -2683,7 +3003,7 @@ requestAnimationFrame(gameLoop);
 // controls
 window.addEventListener("keydown", (event) => {
     if (isTypingInChat()) return;
-    if (event.code === "KeyT" && !event.repeat && !inventoryOpen && !event.ctrlKey && !event.altKey && !event.metaKey) {
+    if (event.code === "KeyT" && !event.repeat && !inventoryOpen && !craftingOpen && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         keys.clear();
         chatInput.focus();
@@ -2693,10 +3013,8 @@ window.addEventListener("keydown", (event) => {
 
     if (event.ctrlKey && event.code === "KeyK") {
         event.preventDefault();
-    
-        if (!event.repeat) {
-            craftItem("axe");
-        }
+        if (!event.repeat) toggleCrafting();
+        return;
     }
 
     if (event.ctrlKey && event.code === "KeyO") {
@@ -2728,6 +3046,17 @@ window.addEventListener("keydown", (event) => {
     if (event.code === "Escape" && !ui.menu.hidden) {
         event.preventDefault();
         closeItemMenu();
+        return;
+    }
+
+    if (craftingOpen) {
+        if (event.code === "Escape" || event.code === "KeyE") {
+            event.preventDefault();
+            if (!event.repeat) {
+                toggleCrafting(false);
+                if (event.code === "KeyE") toggleInventory(true);
+            }
+        }
         return;
     }
 
