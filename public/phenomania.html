@@ -420,8 +420,11 @@ canvas {
 }
 
 .crafting-panel {
-    width: min(580px, 100%);
+    display: flex;
+    flex-direction: column;
+    width: min(590px, 100%);
     max-height: calc(100vh - 28px);
+    min-height: min(430px, calc(100vh - 28px));
     overflow-y: auto;
     padding: 16px;
     border: 4px solid #674d80;
@@ -436,7 +439,7 @@ canvas {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 14px;
     padding: 10px 12px;
     border-radius: 8px 3px 8px 3px;
     background: #604474;
@@ -445,7 +448,11 @@ canvas {
     font-weight: 800;
 }
 
-.crafting-close {
+.crafting-heading-left { display: flex; gap: 10px; align-items: center; min-width: 0; }
+#crafting-title { overflow-wrap: anywhere; }
+
+.crafting-back, .crafting-close {
+    flex-shrink: 0;
     border: 2px solid #bda6d0;
     background: #eee1f8;
     color: #42334f;
@@ -454,65 +461,147 @@ canvas {
     cursor: pointer;
     padding: 3px 9px;
 }
+.crafting-back:hover, .crafting-close:hover { background: #fff5ff; }
+.crafting-back:focus-visible, .crafting-close:focus-visible,
+.crafting-recipe:focus-visible, .crafting-search:focus-visible,
+.crafting-make:focus-visible { outline: 3px solid #8055a8; outline-offset: 2px; }
 
 .crafting-hint {
-    margin: 0 2px 12px;
+    margin: 8px 2px 12px;
     color: #685576;
     font-size: 12px;
 }
 
-.crafting-recipes { display: grid; gap: 10px; }
+.crafting-search {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    background: #f8f0ff;
+    color: #352443;
+    border: 2px solid #9476b0;
+    border-radius: 7px 3px 7px 3px;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+}
+.crafting-search::placeholder { color: #867494; }
+.crafting-search:focus { border-color: #694783; background: #fffaff; }
 
+.crafting-recipes { display: grid; gap: 9px; }
 .crafting-recipe {
-    display: grid;
-    grid-template-columns: 54px minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
     padding: 10px;
     border: 2px solid #aa91c3;
     border-radius: 10px 4px 10px 4px;
     background: #f2eafb;
+    color: #352443;
+    font: inherit;
+    cursor: pointer;
 }
-
-.crafting-recipe-icon {
+.crafting-recipe:hover { background: #fff8ff; border-color: #835ba3; }
+.crafting-recipe-icon, .crafting-result-icon {
+    flex-shrink: 0;
     display: grid;
     place-items: center;
     width: 54px;
     height: 54px;
     padding: 5px;
     border: 2px solid #9476b0;
+    border-radius: 6px 2px 6px 2px;
     background: #e3d1f2;
 }
-
 .crafting-recipe-name { font-weight: 900; font-size: 14px; }
-.crafting-recipe-info { margin-top: 4px; font-size: 11px; color: #685576; }
-.crafting-requirement { display: inline-block; margin-right: 9px; }
-.crafting-requirement.enough { color: #34673c; }
-.crafting-requirement.missing { color: #a14254; }
+.crafting-recipe-info { margin-top: 3px; font-size: 11px; color: #685576; }
+.crafting-recipe-arrow { margin-left: auto; font-size: 25px; color: #806196; }
+.crafting-empty { text-align: center; color: #685576; margin: 38px 0; }
 
-.crafting-make {
-    padding: 10px 11px;
-    border: 2px solid #624680;
-    border-radius: 6px 2px 6px 2px;
-    background: #75528d;
-    color: #fff5dd;
-    font: inherit;
-    font-size: 12px;
+.crafting-details { display: flex; flex: 1; flex-direction: column; min-height: 290px; }
+.crafting-result {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px;
+    background: #f2eafb;
+    border: 2px solid #aa91c3;
+    border-radius: 9px 3px 9px 3px;
+}
+.crafting-result-icon { width: 68px; height: 68px; }
+.crafting-result-name { font-size: 18px; font-weight: 900; }
+.crafting-result-count { font-size: 12px; color: #685576; }
+.crafting-subheading {
+    margin: 18px 2px 10px;
+    font-size: 13px;
     font-weight: 900;
+    color: #5d4074;
+    letter-spacing: 0.35px;
+}
+
+.crafting-materials {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.crafting-material {
+    min-width: 0;
+    padding: 10px 5px 8px;
+    background: #f2eafb;
+    border: 2px solid #aa91c3;
+    border-radius: 8px 3px 8px 3px;
+    text-align: center;
+}
+.crafting-material-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 7px;
+    display: grid;
+    place-items: center;
+}
+.crafting-material.missing .crafting-material-icon { filter: grayscale(1) saturate(0); }
+.crafting-material-name { font-weight: 900; font-size: 12px; overflow-wrap: anywhere; }
+.crafting-material-quantity { font-size: 11px; margin-top: 3px; color: #34673c; }
+.crafting-material.missing .crafting-material-quantity { color: #a14254; }
+.crafting-free { color: #685576; text-align: center; grid-column: 1 / -1; padding: 20px; }
+.crafting-status { min-height: 20px; margin: auto 2px 9px; color: #685576; font-size: 12px; text-align: center; }
+.crafting-status.unavailable { color: #864e60; }
+
+/* matches the chat send button when crafting is possible */
+.crafting-make {
+    display: block;
+    width: 100%;
+    min-height: 54px;
+    padding: 12px 20px;
+    border: 1px solid #d6aaf2;
+    border-radius: 5px 2px 5px 2px;
+    background: #8659aa;
+    color: white;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 800;
     cursor: pointer;
 }
-.crafting-make:hover:not(:disabled) { background: #8e65a8; }
-.crafting-make:disabled { background: #b5a4bf; color: #5d5065; cursor: not-allowed; }
+.crafting-make:hover:not(:disabled) { background: #a06bc9; }
+.crafting-make:disabled {
+    background: #dddddd;
+    border: 2px solid #909090;
+    color: #000000;
+    opacity: 1;
+    cursor: not-allowed;
+}
 
 @media (max-width: 430px) {
     .crafting-panel { padding: 9px; }
-    .crafting-recipe { grid-template-columns: 44px minmax(0, 1fr); }
-    .crafting-recipe-icon { width: 44px; height: 44px; }
-    .crafting-make { grid-column: 2; justify-self: start; }
+    .crafting-materials { gap: 5px; }
+    .crafting-material { padding: 8px 3px; }
+    .crafting-material-icon { width: 42px; height: 42px; }
+    .crafting-material-name { font-size: 11px; }
+    .crafting-heading { font-size: 16px; }
 }
 
-
-    
 
 #profileMenu {
     position: fixed;
@@ -744,11 +833,32 @@ canvas {
 <div class="crafting-screen" id="crafting-screen" hidden>
     <section class="crafting-panel" role="dialog" aria-label="Crafting" aria-modal="true">
         <div class="crafting-heading">
-            <span>Crafting</span>
+            <div class="crafting-heading-left">
+                <button class="crafting-back" id="crafting-back" type="button" aria-label="Back to items" hidden>←</button>
+                <span id="crafting-title">Crafting</span>
+            </div>
             <button class="crafting-close" id="crafting-close" type="button" aria-label="Close crafting">✕</button>
         </div>
-        <p class="crafting-hint">Choose a recipe. Materials are taken from your inventory and hotbar.</p>
-        <div class="crafting-recipes" id="crafting-recipes"></div>
+        <div id="crafting-catalog">
+            <input class="crafting-search" id="crafting-search" type="search" maxlength="80"
+                   placeholder="Search for an item..." aria-label="Search craftable items" autocomplete="off">
+            <p class="crafting-hint">Choose an item to view its materials.</p>
+            <div class="crafting-recipes" id="crafting-recipes"></div>
+            <p class="crafting-empty" id="crafting-empty" hidden>No items found.</p>
+        </div>
+        <div class="crafting-details" id="crafting-details" hidden>
+            <div class="crafting-result">
+                <div class="crafting-result-icon" id="crafting-result-icon"></div>
+                <div>
+                    <div class="crafting-result-name" id="crafting-result-name"></div>
+                    <div class="crafting-result-count" id="crafting-result-count"></div>
+                </div>
+            </div>
+            <div class="crafting-subheading">Required materials</div>
+            <div class="crafting-materials" id="crafting-materials"></div>
+            <p class="crafting-status" id="crafting-status"></p>
+            <button class="crafting-make" id="crafting-make" type="button">Craft</button>
+        </div>
     </section>
 </div>
 
@@ -926,31 +1036,36 @@ function getItemDefinition(itemId) {
     };
 }
 
-// edit these recipes to change material costs
+// crafting recipes - add an entry here and it appears in the crafting search automatically
+// itemId uses ITEM_DEFINITIONS for the name and image (or items/<itemId>.png by default)
+// enabled: false hides a recipe; animation: "axe" plays the axe craft animation
+// freeFirstCraft optionally makes the first craft free; freeOnlyWithout limits that offer
 const CRAFT_RECIPES = [
     {
-        id: "axe-level-1",
         itemId: "axe-level-1",
         amount: 1,
-        ingredients: [{ itemId: "wood", count: 4 }]
+        ingredients: [{ itemId: "wood", count: 4 }],
+        freeFirstCraft: true,
+        freeOnlyWithout: ["axe-level-1", "axe-level-2", "axe-level-3"],
+        animation: "axe"
     },
     {
-        id: "axe-level-2",
         itemId: "axe-level-2",
         amount: 1,
         ingredients: [
             { itemId: "axe-level-1", count: 1 },
             { itemId: "wood", count: 8 }
-        ]
+        ],
+        animation: "axe"
     },
     {
-        id: "axe-level-3",
         itemId: "axe-level-3",
         amount: 1,
         ingredients: [
             { itemId: "axe-level-2", count: 1 },
             { itemId: "wood", count: 16 }
-        ]
+        ],
+        animation: "axe"
     }
 ];
 // setup
@@ -1118,7 +1233,19 @@ const ui = {
     craftButton: document.getElementById("crafting-button"),
     craftScreen: document.getElementById("crafting-screen"),
     craftClose: document.getElementById("crafting-close"),
-    craftRecipes: document.getElementById("crafting-recipes")
+    craftBack: document.getElementById("crafting-back"),
+    craftTitle: document.getElementById("crafting-title"),
+    craftCatalog: document.getElementById("crafting-catalog"),
+    craftSearch: document.getElementById("crafting-search"),
+    craftRecipes: document.getElementById("crafting-recipes"),
+    craftEmpty: document.getElementById("crafting-empty"),
+    craftDetails: document.getElementById("crafting-details"),
+    craftResultIcon: document.getElementById("crafting-result-icon"),
+    craftResultName: document.getElementById("crafting-result-name"),
+    craftResultCount: document.getElementById("crafting-result-count"),
+    craftMaterials: document.getElementById("crafting-materials"),
+    craftStatus: document.getElementById("crafting-status"),
+    craftMake: document.getElementById("crafting-make")
 };
 
 const player = {
@@ -1147,6 +1274,8 @@ const itemTextures = new Map();
 let nextDropId = 1;
 let inventoryOpen = false;
 let craftingOpen = false;
+let selectedCraftItemId = null;
+let previousCraftBusy = false;
 let selectedSlot = -1;
 let selectedHotbarSlot = 0;
 let draggedSlot = -1;
@@ -1294,6 +1423,7 @@ function addInventoryItem(itemId, amount = 1) {
     saveGame();
     renderInventory();
     renderHotbar();
+    if (craftingOpen) renderCrafting();
     return true;
 }
 
@@ -1304,25 +1434,39 @@ function countInventoryItem(itemId) {
 }
 
 function getCraftIngredients(recipe) {
-    // The first basic axe is free, so players can start chopping trees.
-    if (recipe.id === "axe-level-1" && !player.crafted["axe-level-1"] &&
-        !inventory.some(slot => slot && slot.itemId.startsWith("axe-level-"))) {
+    if (!recipe || !Array.isArray(recipe.ingredients)) return null;
+
+    // A recipe can offer the first craft for free, provided the configured items are absent.
+    if (recipe.freeFirstCraft && !player.crafted[recipe.itemId] &&
+        (!Array.isArray(recipe.freeOnlyWithout) ||
+         recipe.freeOnlyWithout.every(itemId => countInventoryItem(itemId) === 0))) {
         return [];
     }
-    return recipe.ingredients;
+
+    // Combine repeated materials so counts and consumption always agree.
+    const quantities = new Map();
+    for (const material of recipe.ingredients) {
+        if (!material || !validItemId(material.itemId) ||
+            !Number.isSafeInteger(material.count) || material.count < 1) return null;
+        quantities.set(material.itemId,
+            (quantities.get(material.itemId) || 0) + material.count);
+    }
+    return Array.from(quantities, ([itemId, count]) => ({ itemId, count }));
 }
 
 function previewCraft(recipe) {
+    if (!recipe || !validItemId(recipe.itemId) || !Number.isSafeInteger(recipe.amount) || recipe.amount < 1) return null;
     const ingredients = getCraftIngredients(recipe);
+    if (ingredients === null) return null;
+
     const result = inventory.map(slot => slot ? { ...slot } : null);
 
     for (const ingredient of ingredients) {
-        const owned = result.reduce((count, slot) =>
-            count + (slot?.itemId === ingredient.itemId ? slot.count : 0), 0);
+        const owned = countInventoryItem(ingredient.itemId);
         if (owned < ingredient.count) return null;
     }
 
-    // Remove all ingredients from a temporary copy before adding the result.
+    // Work on a copy so a failed craft never loses materials.
     for (const ingredient of ingredients) {
         let remaining = ingredient.count;
         for (let i = 0; i < result.length && remaining > 0; i++) {
@@ -1337,9 +1481,10 @@ function previewCraft(recipe) {
 
     let remaining = recipe.amount;
     const limit = getItemDefinition(recipe.itemId).maxStack;
+    if (!Number.isSafeInteger(limit) || limit < 1) return null;
     for (const slot of result) {
         if (!slot || slot.itemId !== recipe.itemId || remaining === 0) continue;
-        const added = Math.min(limit - slot.count, remaining);
+        const added = Math.max(0, Math.min(limit - slot.count, remaining));
         slot.count += added;
         remaining -= added;
     }
@@ -1353,56 +1498,155 @@ function previewCraft(recipe) {
     return remaining === 0 ? result : null;
 }
 
-function renderCrafting() {
-    if (!craftingOpen) return;
+function isCraftBusy() {
+    return player.crafting || player.cutting || player.punching;
+}
+
+function getCraftStatus(recipe) {
+    const ingredients = getCraftIngredients(recipe);
+    if (!ingredients || !Number.isSafeInteger(recipe.amount) || recipe.amount < 1) {
+        return { available: false, message: "This recipe is not configured correctly." };
+    }
+    if (ingredients.some(material => countInventoryItem(material.itemId) < material.count)) {
+        return { available: false, message: "You don't have all the required materials." };
+    }
+    if (isCraftBusy()) {
+        return { available: false, message: "Finish your current action first." };
+    }
+    if (!previewCraft(recipe)) {
+        return { available: false, message: "Not enough room in your inventory." };
+    }
+    return { available: true, message: "You have everything you need!" };
+}
+
+function renderCraftingList() {
+    const search = ui.craftSearch.value.toLocaleLowerCase().replace(/[-_]+/g, " ").trim();
     const fragment = document.createDocumentFragment();
+    let found = 0;
 
+    // New recipes are displayed here automatically; no manual button setup needed.
     for (const recipe of CRAFT_RECIPES) {
+        if (recipe.enabled === false || !validItemId(recipe.itemId)) continue;
         const def = getItemDefinition(recipe.itemId);
-        const ingredients = getCraftIngredients(recipe);
-        const available = Boolean(previewCraft(recipe)) && !player.crafting && !player.cutting && !player.punching;
-
-        const card = document.createElement("div");
-        card.className = "crafting-recipe";
-
-        const icon = document.createElement("div");
-        icon.className = "crafting-recipe-icon";
-        icon.appendChild(createItemIcon(recipe.itemId));
-
-        const detail = document.createElement("div");
-        const name = document.createElement("div");
-        name.className = "crafting-recipe-name";
-        name.textContent = def.name + (recipe.amount > 1 ? ` ×${recipe.amount}` : "");
-        name.style.color = def.nameColor === "#ffffff" ? "#59416c" : (def.nameColor || "#352443");
-        detail.appendChild(name);
-
-        const info = document.createElement("div");
-        info.className = "crafting-recipe-info";
-        if (ingredients.length === 0) {
-            info.textContent = "Free starter axe · first craft only";
-        } else {
-            for (const ingredient of ingredients) {
-                const owned = countInventoryItem(ingredient.itemId);
-                const span = document.createElement("span");
-                span.className = "crafting-requirement " + (owned >= ingredient.count ? "enough" : "missing");
-                span.textContent = `${getItemDefinition(ingredient.itemId).name}: ${owned}/${ingredient.count}`;
-                info.appendChild(span);
-            }
-        }
-        detail.appendChild(info);
+        const terms = `${def.name} ${recipe.itemId} ${recipe.searchTerms || ""}`
+            .toLocaleLowerCase().replace(/[-_]+/g, " ");
+        if (search && !terms.includes(search)) continue;
+        found++;
 
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "crafting-make";
-        button.textContent = available ? "Craft" : "Locked";
-        button.disabled = !available;
-        button.title = available ? "Craft this item" : "Missing materials or inventory space";
-        button.addEventListener("click", () => craftRecipe(recipe.id));
-        card.append(icon, detail, button);
-        fragment.appendChild(card);
+        button.className = "crafting-recipe";
+        button.setAttribute("aria-label", `View recipe for ${def.name}`);
+
+        const icon = document.createElement("span");
+        icon.className = "crafting-recipe-icon";
+        icon.appendChild(createItemIcon(recipe.itemId));
+
+        const details = document.createElement("span");
+        const name = document.createElement("div");
+        name.className = "crafting-recipe-name";
+        name.textContent = def.name;
+        const info = document.createElement("div");
+        info.className = "crafting-recipe-info";
+        info.textContent = `Craft ×${recipe.amount}`;
+        details.append(name, info);
+
+        const arrow = document.createElement("span");
+        arrow.className = "crafting-recipe-arrow";
+        arrow.textContent = "›";
+        arrow.setAttribute("aria-hidden", "true");
+
+        button.append(icon, details, arrow);
+        button.addEventListener("click", () => openCraftingDetails(recipe.itemId));
+        fragment.appendChild(button);
     }
 
     ui.craftRecipes.replaceChildren(fragment);
+    ui.craftEmpty.hidden = found > 0;
+}
+
+function renderCraftingDetails() {
+    const recipe = CRAFT_RECIPES.find(entry => entry.itemId === selectedCraftItemId && entry.enabled !== false);
+    if (!recipe) {
+        openCraftingList();
+        return;
+    }
+    const def = getItemDefinition(recipe.itemId);
+    const ingredients = getCraftIngredients(recipe);
+
+    ui.craftTitle.textContent = "Crafting";
+    ui.craftResultIcon.replaceChildren(createItemIcon(recipe.itemId));
+    ui.craftResultName.textContent = def.name;
+    ui.craftResultCount.textContent = `Produces ×${recipe.amount}`;
+
+    const fragment = document.createDocumentFragment();
+    if (ingredients && ingredients.length === 0) {
+        const free = document.createElement("div");
+        free.className = "crafting-free";
+        free.textContent = "No materials needed";
+        fragment.appendChild(free);
+    } else if (ingredients) {
+        for (const material of ingredients) {
+            const owned = countInventoryItem(material.itemId);
+            const enough = owned >= material.count;
+            const defMaterial = getItemDefinition(material.itemId);
+
+            const tile = document.createElement("div");
+            tile.className = "crafting-material" + (enough ? "" : " missing");
+            tile.title = `${defMaterial.name}: ${owned} / ${material.count}`;
+
+            const icon = document.createElement("div");
+            icon.className = "crafting-material-icon";
+            icon.appendChild(createItemIcon(material.itemId));
+
+            const label = document.createElement("div");
+            label.className = "crafting-material-name";
+            label.textContent = defMaterial.name;
+
+            const count = document.createElement("div");
+            count.className = "crafting-material-quantity";
+            count.textContent = `${owned} / ${material.count}`;
+
+            tile.append(icon, label, count);
+            fragment.appendChild(tile);
+        }
+    }
+    ui.craftMaterials.replaceChildren(fragment);
+
+    const status = getCraftStatus(recipe);
+    ui.craftMake.textContent = "Craft";
+    ui.craftMake.disabled = !status.available;
+    ui.craftMake.title = status.message;
+    ui.craftStatus.textContent = status.message;
+    ui.craftStatus.classList.toggle("unavailable", !status.available);
+}
+
+function openCraftingDetails(itemId) {
+    if (!craftingOpen) return;
+    const recipe = CRAFT_RECIPES.find(entry => entry.itemId === itemId && entry.enabled !== false);
+    if (!recipe) return;
+    selectedCraftItemId = itemId;
+    ui.craftCatalog.hidden = true;
+    ui.craftDetails.hidden = false;
+    ui.craftBack.hidden = false;
+    renderCraftingDetails();
+    ui.craftBack.focus();
+}
+
+function openCraftingList() {
+    selectedCraftItemId = null;
+    ui.craftCatalog.hidden = false;
+    ui.craftDetails.hidden = true;
+    ui.craftBack.hidden = true;
+    ui.craftTitle.textContent = "Crafting";
+    renderCraftingList();
+    if (craftingOpen) ui.craftSearch.focus();
+}
+
+function renderCrafting() {
+    if (!craftingOpen) return;
+    if (selectedCraftItemId === null) renderCraftingList();
+    else renderCraftingDetails();
 }
 
 function toggleCrafting(forceOpen = !craftingOpen) {
@@ -1419,16 +1663,17 @@ function toggleCrafting(forceOpen = !craftingOpen) {
     closeItemMenu();
     wakePlayer();
     if (craftingOpen) {
-        renderCrafting();
-        ui.craftClose.focus();
+        ui.craftSearch.value = "";
+        openCraftingList();
     } else {
+        selectedCraftItemId = null;
         ui.craftButton.focus();
     }
 }
 
 function craftRecipe(recipeId) {
-    const recipe = CRAFT_RECIPES.find(entry => entry.id === recipeId);
-    if (!recipe || !craftingOpen || player.crafting || player.cutting || player.punching) return false;
+    const recipe = CRAFT_RECIPES.find(entry => entry.itemId === recipeId && entry.enabled !== false);
+    if (!recipe || !craftingOpen || isCraftBusy()) return false;
 
     const result = previewCraft(recipe);
     if (!result) {
@@ -1437,19 +1682,24 @@ function craftRecipe(recipeId) {
         return false;
     }
 
-    // Keep crafting atomic: no ingredients disappear unless the item fits.
+    // Don't consume materials unless the crafted item fits in inventory.
     for (let i = 0; i < INVENTORY_SLOTS; i++) inventory[i] = result[i];
     player.crafted[recipe.itemId] = true;
-    craftItem("axe");
+    if (recipe.animation === "axe") craftItem("axe");
     saveGame();
     renderHotbar();
     toggleCrafting(false);
-    showMessage(`Crafted ${getItemDefinition(recipe.itemId).name}!`);
+    showMessage(`Crafted ${getItemDefinition(recipe.itemId).name} ×${recipe.amount}!`);
     return true;
 }
 
 ui.craftButton.addEventListener("click", () => toggleCrafting());
 ui.craftClose.addEventListener("click", () => toggleCrafting(false));
+ui.craftBack.addEventListener("click", openCraftingList);
+ui.craftSearch.addEventListener("input", renderCraftingList);
+ui.craftMake.addEventListener("click", () => {
+    if (selectedCraftItemId !== null) craftRecipe(selectedCraftItemId);
+});
 ui.craftScreen.addEventListener("pointerdown", event => {
     if (event.target === ui.craftScreen) toggleCrafting(false);
 });
@@ -2829,6 +3079,12 @@ function drawPlayer(screenX, screenY) {
     }
 // update ui
 function updateUI(dt) {
+    const busy = isCraftBusy();
+    if (craftingOpen && selectedCraftItemId !== null && busy !== previousCraftBusy) {
+        renderCraftingDetails();
+    }
+    previousCraftBusy = busy;
+
     if (notificationTime > 0) {
         notificationTime -= dt;
 
@@ -3053,8 +3309,12 @@ window.addEventListener("keydown", (event) => {
         if (event.code === "Escape" || event.code === "KeyE") {
             event.preventDefault();
             if (!event.repeat) {
-                toggleCrafting(false);
-                if (event.code === "KeyE") toggleInventory(true);
+                if (event.code === "Escape" && selectedCraftItemId !== null) {
+                    openCraftingList();
+                } else {
+                    toggleCrafting(false);
+                    if (event.code === "KeyE") toggleInventory(true);
+                }
             }
         }
         return;
