@@ -185,12 +185,22 @@
 
 
     // Admin Skip
-    window.addEventListener("keydown" (event) => {
-        if (event.code === "KeyG") {
-            window.location.replace("phenomania.html");
-
-        }
+    window.addEventListener('keydown', async (event) => {
+      if (event.code === 'KeyG') {
+        await authenticate(
+          '/api/register',
+          {
+            username: 'Dev-001',
+            email: 'dev-001@gmail.com',
+            password: '12345-6789'
+          },
+          registerForm
+        );
+    
+        window.location.replace('phenomania.html');
+      }
     });
+
     
 </script>
 </body>
