@@ -2004,7 +2004,8 @@ function craftItem(text) {
     if (text === "axe") {
         let craftObject = maleAxeCrafted;
     }
-    player.crafted[craftObject] = true;
+    player.crafted[text] = true;
+}
 
     
 // find nearest tree
@@ -2665,6 +2666,14 @@ window.addEventListener("keydown", (event) => {
         return;
     }
     if (!event.repeat) wakePlayer();
+
+    if (event.ctrlKey && event.code === "KeyK") {
+        event.preventDefault();
+    
+        if (!event.repeat) {
+            craftItem("axe");
+        }
+    }
 
     if (event.ctrlKey && event.code === "KeyO") {
         event.preventDefault();
