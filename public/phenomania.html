@@ -2005,8 +2005,10 @@ const CRAFT_DURATION = (CRAFT_FRAME_COUNT / CRAFT_FPS) * 1000;
 
 function craftItem(text) {
     if (text === "axe") {
-        let craftObject = maleAxeCrafted;
+        player.crafting = true;
+        player.craftStartedAt = performance.now();
     }
+
     player.crafted[text] = true;
 }
 
@@ -2568,7 +2570,7 @@ function update(dt) {
     const dy = inputY / length;
 
     const speed =
-        keys.has("ShiftLeft") || keys.has("ShiftRight")
+        keys.has("ControlLeft")
             ? SPRINT_SPEED
             : WALK_SPEED;
 
