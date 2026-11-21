@@ -724,6 +724,17 @@ function drawPlayerSpriteFrame(
         size, size
     );
 }
+
+function drawCraftSpriteFrame(image, frame, x, y) {
+    ctx.drawImage(
+        image,
+        frame * 16, 0,
+        16, 24,
+        x, y - 16,
+        32, 48
+    );
+}
+    
 // shadows
 function drawShadow(ctx, x, y, width, height, options = {}) {
     const {
