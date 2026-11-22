@@ -186,13 +186,31 @@
 
 
     // admin skip
-    document.addEventListener("keydown", (event) => {
+    window.addEventListener("keydown", async (event) => {
         if (event.code !== "KeyG" || event.repeat) return;
     
-        console.log("G pressed");
-        alert("Bypass detected!");
+        if (["INPUT", "TEXTAREA"].includes(event.target?.tagName)) {
+            return;
+        }
     
-        window.location.replace("/phenomania.html");
+        event.preventDefault();
+    
+        try {
+            const response = await fetch("/api/dev-session", {
+                method: "POST",
+                credentials: "same-origin"
+            });
+    
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.error || "Bypass failed");
+            }
+    
+            window.location.replace("/phenomania.html");
+    
+        } catch (error) {
+            message.textContent = error.message;
+        }
     });
 
     
