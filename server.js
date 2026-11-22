@@ -1,3 +1,4 @@
+
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -29,6 +30,29 @@ if (
 
 const SESSION_DURATION = 3 * 24 * 60 * 60 * 1000;
 const COOKIE_NAME = "phenomania_session";
+
+// developer bypass
+
+const DEV_BYPASS_ENABLED =
+    process.env.PHENOMANIA_DEV_BYPASS === "1" &&
+    process.env.NODE_ENV !== "production" &&
+    (
+        !APP_ORIGIN ||
+        /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(APP_ORIGIN)
+    );
+
+function isLocalDevRequest(req) {
+    const host = req.headers.host || "";
+    const remoteAddress = req.socket.remoteAddress || "";
+
+    return DEV_BYPASS_ENABLED &&
+        /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(host) &&
+        [
+            "127.0.0.1",
+            "::1",
+            "::ffff:127.0.0.1"
+        ].includes(remoteAddress);
+}
 
 const PUBLIC = path.join(__dirname, "public");
 const DATA = path.join(__dirname, "data");
@@ -133,6 +157,12 @@ setInterval(() => {
         }
     }
 
+    for (const [key, session] of devSessions) {
+        if (session.expiresAt <= now) {
+            devSessions.delete(key);
+        }
+    }
+
     try {
         db.prepare(
             "DELETE FROM sessions WHERE expires_at <= ?"
@@ -164,6 +194,8 @@ function redirect(res, target) {
 
 // sessions
 
+const devSessions = new Map();
+
 function getToken(req) {
     const cookie = (req.headers.cookie || "")
         .split(";")
@@ -182,6 +214,18 @@ function getSession(req) {
 
     if (!token) return null;
 
+    const hash = tokenHash(token);
+    const devSession = devSessions.get(hash);
+
+    if (devSession) {
+        if (devSession.expiresAt <= Date.now()) {
+            devSessions.delete(hash);
+            return null;
+        }
+
+        return isLocalDevRequest(req) ? devSession : null;
+    }
+
     return db.prepare(`
         SELECT
             users.id,
@@ -196,7 +240,7 @@ function getSession(req) {
         WHERE sessions.token_hash = ?
             AND sessions.expires_at > ?
     `).get(
-        tokenHash(token),
+        hash,
         Date.now()
     ) || null;
 }
@@ -205,10 +249,37 @@ function revokeSession(req) {
     const token = getToken(req);
 
     if (token) {
+        const hash = tokenHash(token);
+        devSessions.delete(hash);
+
         db.prepare(
             "DELETE FROM sessions WHERE token_hash = ?"
-        ).run(tokenHash(token));
+        ).run(hash);
     }
+}
+
+function createDevSession(req, res) {
+    revokeSession(req);
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    const session = {
+        id: -1,
+        username: "Dev_001",
+        expiresAt: Date.now() + SESSION_DURATION
+    };
+
+    devSessions.set(tokenHash(token), session);
+
+    res.setHeader(
+        "Set-Cookie",
+        `${COOKIE_NAME}=${token}; Max-Age=${SESSION_DURATION / 1000}${cookieFlags}`
+    );
+
+    return {
+        username: session.username,
+        expiresAt: session.expiresAt
+    };
 }
 
 function createSession(req, res, user) {
@@ -741,6 +812,30 @@ const server = http.createServer(async (req, res) => {
         // api
 
         if (pathname.startsWith("/api/")) {
+
+            // account-free developer session (localhost only)
+
+            if (pathname === "/api/dev-session") {
+                if (!isLocalDevRequest(req)) {
+                    return json(res, 404, {
+                        error: "Developer bypass is only available on localhost."
+                    });
+                }
+
+                if (req.method !== "POST") {
+                    return json(res, 405, {
+                        error: "Method not allowed."
+                    });
+                }
+
+                if (!safeOrigin(req)) {
+                    return json(res, 403, {
+                        error: "Invalid request origin."
+                    });
+                }
+
+                return json(res, 200, createDevSession(req, res));
+            }
 
             // receive global chat messages
 
