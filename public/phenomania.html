@@ -3032,7 +3032,7 @@ function getPlayerSprite() {
         playerSprites[direction] || playerSprites.downLeft;
 
     const running =
-        keys.has("ControlLeft");
+        keys.has("ShiftLeft");
 
     let preferred;
 
@@ -3247,7 +3247,7 @@ function update(dt) {
     const dy = inputY / length;
 
     const speed =
-        keys.has("ControlLeft")
+        keys.has("ShiftLeft")
             ? SPRINT_SPEED
             : WALK_SPEED;
 
