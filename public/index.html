@@ -195,14 +195,23 @@
     
         event.preventDefault();
     
+        const code = window.prompt("Developer access code:");
+    
+        if (!code) return;
+    
         try {
             const response = await fetch("/api/dev-session", {
                 method: "POST",
-                credentials: "same-origin"
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({ code })
             });
     
+            const result = await response.json();
+    
             if (!response.ok) {
-                const result = await response.json();
                 throw new Error(result.error || "Bypass failed");
             }
     
