@@ -1,4 +1,3 @@
-
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -33,26 +32,8 @@ const COOKIE_NAME = "phenomania_session";
 
 // developer bypass
 
-const DEV_BYPASS_ENABLED =
-    process.env.PHENOMANIA_DEV_BYPASS === "1" &&
-    process.env.NODE_ENV !== "production" &&
-    (
-        !APP_ORIGIN ||
-        /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(APP_ORIGIN)
-    );
-
-function isLocalDevRequest(req) {
-    const host = req.headers.host || "";
-    const remoteAddress = req.socket.remoteAddress || "";
-
-    return DEV_BYPASS_ENABLED &&
-        /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(host) &&
-        [
-            "127.0.0.1",
-            "::1",
-            "::ffff:127.0.0.1"
-        ].includes(remoteAddress);
-}
+const DEV_ACCESS_CODE = process.env.PHENOMANIA_DEV_CODE || "";
+const DEV_BYPASS_ENABLED = DEV_ACCESS_CODE.length >= 24;
 
 const PUBLIC = path.join(__dirname, "public");
 const DATA = path.join(__dirname, "data");
@@ -223,7 +204,7 @@ function getSession(req) {
             return null;
         }
 
-        return isLocalDevRequest(req) ? devSession : null;
+        return DEV_BYPASS_ENABLED ? devSession : null;
     }
 
     return db.prepare(`
@@ -240,7 +221,7 @@ function getSession(req) {
         WHERE sessions.token_hash = ?
             AND sessions.expires_at > ?
     `).get(
-        hash,
+        tokenHash(token),
         Date.now()
     ) || null;
 }
@@ -813,12 +794,12 @@ const server = http.createServer(async (req, res) => {
 
         if (pathname.startsWith("/api/")) {
 
-            // account-free developer session (localhost only)
+            // public deployment developer session
 
             if (pathname === "/api/dev-session") {
-                if (!isLocalDevRequest(req)) {
+                if (!DEV_BYPASS_ENABLED) {
                     return json(res, 404, {
-                        error: "Developer bypass is only available on localhost."
+                        error: "Developer access is not configured."
                     });
                 }
 
@@ -834,7 +815,52 @@ const server = http.createServer(async (req, res) => {
                     });
                 }
 
-                return json(res, 200, createDevSession(req, res));
+                if (
+                    !(req.headers["content-type"] || "")
+                        .toLowerCase()
+                        .startsWith("application/json")
+                ) {
+                    return json(res, 415, {
+                        error: "JSON required."
+                    });
+                }
+
+                if (!rateAllowed(req)) {
+                    return json(res, 429, {
+                        error: "Too many attempts. Please try again later."
+                    });
+                }
+
+                const body = await readJson(req);
+                const code = string(body.code);
+
+                const suppliedHash = crypto
+                    .createHash("sha256")
+                    .update(code)
+                    .digest();
+
+                const expectedHash = crypto
+                    .createHash("sha256")
+                    .update(DEV_ACCESS_CODE)
+                    .digest();
+
+                if (
+                    !code ||
+                    !crypto.timingSafeEqual(
+                        suppliedHash,
+                        expectedHash
+                    )
+                ) {
+                    return json(res, 401, {
+                        error: "Incorrect developer code."
+                    });
+                }
+
+                return json(
+                    res,
+                    200,
+                    createDevSession(req, res)
+                );
             }
 
             // receive global chat messages
