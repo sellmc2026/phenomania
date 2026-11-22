@@ -113,13 +113,6 @@
     <p class="footer">Your adventure awaits.</p>
 </main>
 <script>
-
-    document.addEventListener("keydown", (event) => {
-        if (event.key.toLowerCase() === "g") {
-            alert("G was detected!");
-            window.location.href = "/phenomania.html";
-        }
-    }, true);
     
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
@@ -193,12 +186,13 @@
 
 
     // admin skip
-    window.addEventListener("keydown", (event) => {
-        if (event.code === "KeyG") {
-            console.log("Admin bypass activated");
-            alert("Bypass is working!");
-            window.location.href = "/phenomania.html";
-        }
+    document.addEventListener("keydown", (event) => {
+        if (event.code !== "KeyG" || event.repeat) return;
+    
+        console.log("G pressed");
+        alert("Bypass detected!");
+    
+        window.location.replace("/phenomania.html");
     });
 
     
