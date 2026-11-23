@@ -2648,7 +2648,7 @@ async function holdToCutTree(tree) {
 
     try {
         while (
-            (keys.has("KeyZ") || keys.has("Enter")) &&
+            (keys.has("KeyR") || keys.has("Space")) &&
             !cutTrees.has(tree.key)
         ) {
             const previousDamage = tree.cutDamage || 0;
