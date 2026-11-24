@@ -4107,15 +4107,20 @@ window.addEventListener("keydown", (event) => {
     
         if (!event.repeat) {
             const tree = getNearestTree();
-
+            const rock = getNearestRock();
+    
+            const treeDistance = tree
+                ? Math.hypot(tree.x - player.x, tree.y - player.y)
+                : Infinity;
+    
             const rockDistance = rock
                 ? Math.hypot(rock.x - player.x, rock.y - player.y)
                 : Infinity;
     
             if (rock && rockDistance <= treeDistance) {
                 punchRock(rock);
-        
-            if (tree) {
+    
+            } else if (tree) {
                 const heldItemId = getHeldItem()?.itemId;
     
                 if (AXE_HIT_RANGES[heldItemId]) {
