@@ -3732,7 +3732,7 @@ function gameLoop(now) {
 // rock settings
 const ROCK_CELL_TILES = 8;
 const ROCK_CHANCE_PERCENT = 25;
-const ROCK_SIZE = 32;
+const ROCK_SIZE = 80;
 const ROCK_HALF_WIDTH = 12;
 const ROCK_DEPTH = 10;
 const ROCK_INTERACTION_DISTANCE = 30;
@@ -3816,6 +3816,8 @@ function getRockInCell(cx, cy) {
 
     return rock;
 }
+
+const ROCK_PUNCHES_REQUIRED = 5;
 
 function getRocksInBounds(left, top, right, bottom) {
     const cellSize = ROCK_CELL_TILES * TILE_SIZE;
@@ -3909,6 +3911,41 @@ function shakeRock(rock) {
     rock.shakeStartedAt = performance.now();
 }
 
+
+async function punchRock(rock) {
+    if (
+        !rock ||
+        rock.mining ||
+        player.punching ||
+        player.cutting ||
+        player.crafting
+    ) return;
+
+    if (rockCache.get(rock.key) !== rock) return;
+
+    rock.mining = true;
+    player.punching = true;
+    player.punchStartedAt = performance.now();
+
+    wakePlayer();
+
+    await sleep(300);
+
+    rock.mineDamage += 1;
+
+    shakeRock(rock);
+
+    if (rock.mineDamage >= ROCK_PUNCHES_REQUIRED) {
+        await sleep(200);
+
+        rockCache.set(rock.key, null);
+
+        // rock item drops go here
+    }
+
+    rock.mining = false;
+}
+    
 // draw rock
 function drawRock(rock, cameraX, cameraY) {
     const x = Math.round(rock.x - cameraX);
@@ -4070,7 +4107,14 @@ window.addEventListener("keydown", (event) => {
     
         if (!event.repeat) {
             const tree = getNearestTree();
+
+            const rockDistance = rock
+                ? Math.hypot(rock.x - player.x, rock.y - player.y)
+                : Infinity;
     
+            if (rock && rockDistance <= treeDistance) {
+                punchRock(rock);
+        
             if (tree) {
                 const heldItemId = getHeldItem()?.itemId;
     
