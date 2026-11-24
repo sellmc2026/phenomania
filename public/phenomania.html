@@ -3945,7 +3945,35 @@ async function punchRock(rock) {
 
     rock.mining = false;
 }
+
+
+let autoMining = false;
+async function holdToMineRock(rock) {
+    if (!rock || autoMining) return;
+
+    autoMining = true;
+
+    try {
+        while (
+            (keys.has("KeyR") || keys.has("Space")) &&
+            rockCache.get(rock.key) === rock
+        ) {
+            const previousDamage = rock.mineDamage || 0;
+
+            await punchRock(rock);
+
+            if (rockCache.get(rock.key) !== rock) break;
+
+            // stop if the punch was unsuccessful
+            if ((rock.mineDamage || 0) <= previousDamage) break;
+        }
+    } finally {
+        autoMining = false;
+    }
+}
+
     
+
 // draw rock
 function drawRock(rock, cameraX, cameraY) {
     const x = Math.round(rock.x - cameraX);
@@ -4118,7 +4146,7 @@ window.addEventListener("keydown", (event) => {
                 : Infinity;
     
             if (rock && rockDistance <= treeDistance) {
-                punchRock(rock);
+                holdToMineRock(rock);
     
             } else if (tree) {
                 const heldItemId = getHeldItem()?.itemId;
