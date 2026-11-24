@@ -7,6 +7,17 @@
 <style>
 * { box-sizing: border-box; }
 
+/* color palette */
+:root {
+    --cream: #EBEBDA;
+    --olive: #67744B;
+    --dark-olive: #485134;
+    --sage: #9EA588;
+    --light-cream: #F5F5E9;
+    --dark-shadow: #303722;
+    --hotbar-size: 64px;
+}
+
 /* font */
 @font-face {
     font-family: "MaintFont";
@@ -35,13 +46,12 @@
          1px  1px 0 #000;
 }
 
-
 html, body {
     margin: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #79a66e;
+    background: var(--sage);
 }
 
 canvas {
@@ -53,18 +63,19 @@ canvas {
 
 .game-ui {
     font: 600 14px/1.4 ui-monospace, Menlo, Consolas, monospace;
-    color: #f9f2d8;
+    color: var(--cream);
 }
 
+/* hud */
 .hud {
     position: fixed;
     top: 14px;
     left: 14px;
     z-index: 3;
     padding: 10px 13px;
-    background: #2a4031;
-    border: 2px solid #15271b;
-    box-shadow: 3px 3px 0 #1b2d1f;
+    background: var(--dark-olive);
+    border: 2px solid var(--sage);
+    box-shadow: 3px 3px 0 var(--dark-shadow);
     pointer-events: none;
 }
 
@@ -72,9 +83,9 @@ canvas {
     display: inline-block;
     min-width: 23px;
     padding: 1px 5px;
-    background: #d6cba4;
-    border: 1px solid #f7e9bd;
-    color: #253624;
+    background: var(--cream);
+    border: 1px solid var(--sage);
+    color: var(--dark-olive);
     font: inherit;
     text-align: center;
     margin-right: 6px;
@@ -93,9 +104,10 @@ canvas {
 
 .pickup-label, .toast {
     padding: 9px 13px;
-    border: 2px solid #17281b;
-    background: #283c2d;
-    box-shadow: 3px 3px 0 #17281b;
+    border: 2px solid var(--sage);
+    background: var(--dark-olive);
+    box-shadow: 3px 3px 0 var(--dark-shadow);
+    color: var(--cream);
 }
 
 .toast-area {
@@ -110,10 +122,6 @@ canvas {
 }
 
 /* hotbar */
-:root {
-    --hotbar-size: 64px;
-}
-
 .hotbar {
     position: fixed;
     left: 50%;
@@ -124,29 +132,38 @@ canvas {
     grid-template-columns: repeat(9, var(--hotbar-size));
     gap: 3px;
     padding: 4px;
-    background: rgba(40, 23, 55, 0.70);
-    border: 2px solid #79618b;
+    background: rgba(72, 81, 52, 0.85);
+    border: 2px solid var(--sage);
     border-radius: 8px;
-    box-shadow: 3px 3px 0 rgba(23, 13, 32, 0.65);
+    box-shadow: 3px 3px 0 rgba(48, 55, 34, 0.65);
 }
 
 .hotbar-slot {
     width: var(--hotbar-size);
     height: var(--hotbar-size);
     position: relative;
-    border: 0;
+    border: 2px solid var(--dark-olive);
+    border-radius: 5px 2px 5px 2px;
     padding: 0;
-    background: #4f3565 url("hotbar-slot-unselected.png") center / 100% 100% no-repeat;
+    background: var(--olive);
+    box-shadow: inset 0 0 0 2px var(--sage);
     image-rendering: pixelated;
     cursor: pointer;
 }
 
-.hotbar-slot.active {
-    background-image: url("hotbar-slot-selected.png");
+.hotbar-slot:hover {
+    background: var(--sage);
 }
 
-.hotbar-slot:focus-visible, .inventory-slot:focus-visible {
-    outline: 2px solid #ffefac;
+.hotbar-slot.active {
+    background: var(--cream);
+    border: 2px solid var(--dark-olive);
+    box-shadow: inset 0 0 0 3px var(--sage);
+}
+
+.hotbar-slot:focus-visible,
+.inventory-slot:focus-visible {
+    outline: 2px solid var(--cream);
     outline-offset: 2px;
 }
 
@@ -162,14 +179,23 @@ canvas {
     position: absolute;
     top: 1px;
     left: 3px;
-    color: #fff4ce;
+    color: var(--cream);
     font-size: 16px;
     line-height: 1;
-    text-shadow: 1px 1px #392244, -1px -1px #392244;
+    text-shadow:
+        1px 1px var(--dark-olive),
+        -1px -1px var(--dark-olive);
     pointer-events: none;
 }
 
-.hotbar-slot .item-quantity { font-size: 12px; }
+.hotbar-slot.active .hotbar-number {
+    color: var(--dark-olive);
+    text-shadow: none;
+}
+
+.hotbar-slot .item-quantity {
+    font-size: 12px;
+}
 
 /* currently held item */
 #held-item-name {
@@ -195,25 +221,29 @@ canvas {
     position: fixed;
     inset: 0;
     z-index: 20;
-    background: rgba(23, 13, 32, 0.70);
+    background: rgba(48, 55, 34, 0.70);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 12px;
 }
 
-[hidden] { display: none !important; }
+[hidden] {
+    display: none !important;
+}
 
 .inventory-panel {
     width: min(560px, 100%);
     max-height: calc(100vh - 24px);
     overflow-y: auto;
     padding: 16px;
-    border: 4px solid #674d80;
+    border: 4px solid var(--dark-olive);
     border-radius: 16px 6px 16px 6px;
-    background: #d9c6ec;
-    color: #352443;
-    box-shadow: 6px 6px 0 #24162f, inset 0 0 0 2px #f4eaff;
+    background: var(--cream);
+    color: var(--dark-olive);
+    box-shadow:
+        6px 6px 0 var(--dark-shadow),
+        inset 0 0 0 2px var(--sage);
 }
 
 .inventory-heading {
@@ -224,9 +254,9 @@ canvas {
     padding: 10px 12px;
     margin-bottom: 11px;
     border-radius: 8px 3px 8px 3px;
-    background: #604474;
-    border-bottom: 3px solid #8e729d;
-    color: #fff5dd;
+    background: var(--olive);
+    border-bottom: 3px solid var(--dark-olive);
+    color: var(--cream);
     font-size: 19px;
     font-weight: 800;
 }
@@ -239,7 +269,7 @@ canvas {
 
 .inventory-section-title {
     margin: 12px 2px 6px;
-    color: #5d4074;
+    color: var(--dark-olive);
     font-size: 12px;
     letter-spacing: 0.6px;
     text-transform: uppercase;
@@ -250,9 +280,9 @@ canvas {
     grid-template-columns: repeat(9, minmax(0, 1fr));
     gap: 5px;
     padding: 9px;
-    border: 2px solid #aa91c3;
+    border: 2px solid var(--olive);
     border-radius: 10px;
-    background: #c2a9db;
+    background: var(--sage);
 }
 
 .inventory-slot {
@@ -262,34 +292,34 @@ canvas {
     aspect-ratio: 1;
     display: grid;
     place-items: center;
-    border: 2px solid #9476b0;
+    border: 2px solid var(--olive);
     border-radius: 7px 3px 7px 3px;
-    background: #f2eafb;
+    background: var(--cream);
     padding: 2px;
     cursor: pointer;
-    color: #452d58;
+    color: var(--dark-olive);
     touch-action: none;
 }
 
 .inventory-slot:hover {
-    background: #fff7ff;
-    border-color: #6fa36c;
+    background: var(--light-cream);
+    border-color: var(--dark-olive);
 }
 
 .inventory-slot.selected {
-    border-color: #e5bd65;
-    background: #fff2ca;
-    box-shadow: inset 0 0 0 1px #fff;
+    border-color: var(--dark-olive);
+    background: var(--light-cream);
+    box-shadow: inset 0 0 0 2px var(--sage);
 }
 
 .inventory-slot.hotbar-equipped {
-    box-shadow: inset 0 -3px 0 #82a576;
+    box-shadow: inset 0 -3px 0 var(--olive);
 }
 
 .inventory-slot.drag-over {
-    border-color: #4d965b;
-    background: #e4ffe3;
-    outline: 2px dashed #487b48;
+    border-color: var(--dark-olive);
+    background: var(--sage);
+    outline: 2px dashed var(--dark-olive);
 }
 
 .item-icon {
@@ -316,22 +346,25 @@ canvas {
     line-height: 1;
     color: #fff;
     pointer-events: none;
-    text-shadow: -1px -1px #34243e, 1px -1px #34243e,
-                  -1px 1px #34243e, 1px 1px #34243e;
+    text-shadow:
+        -1px -1px var(--dark-olive),
+         1px -1px var(--dark-olive),
+        -1px  1px var(--dark-olive),
+         1px  1px var(--dark-olive);
 }
 
 .inventory-info {
     min-height: 48px;
     margin-top: 11px;
     padding: 9px 8px 0;
-    border-top: 2px solid #b49bc7;
+    border-top: 2px solid var(--sage);
     font-size: 13px;
 }
 
 .inventory-hint {
     margin-top: 5px;
     font-size: 12px;
-    color: #685576;
+    color: var(--olive);
 }
 
 /* right click item menu */
@@ -340,11 +373,11 @@ canvas {
     z-index: 40;
     width: 218px;
     padding: 11px;
-    border: 3px solid #674d80;
+    border: 3px solid var(--dark-olive);
     border-radius: 11px 4px 11px 4px;
-    background: #f0e5fa;
-    color: #3b2949;
-    box-shadow: 4px 4px 0 #24162f;
+    background: var(--cream);
+    color: var(--dark-olive);
+    box-shadow: 4px 4px 0 var(--dark-shadow);
 }
 
 .item-menu-title {
@@ -356,7 +389,7 @@ canvas {
 .item-menu-description {
     font-size: 11px;
     margin-bottom: 10px;
-    color: #685474;
+    color: var(--olive);
 }
 
 .item-menu-actions {
@@ -366,14 +399,35 @@ canvas {
 
 .item-menu button {
     padding: 8px;
-    border: 2px solid #7d638f;
+    border: 2px solid var(--olive);
     border-radius: 6px 2px 6px 2px;
-    background: #ddcbed;
-    color: #3b2949;
+    background: var(--sage);
+    color: var(--dark-olive);
     font: inherit;
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
+}
+
+.item-menu button:hover {
+    background: var(--light-cream);
+    border-color: var(--dark-olive);
+}
+
+.item-menu button.danger {
+    background: #E6CEC4;
+    border-color: #A66D60;
+    color: #803F36;
+}
+
+.item-menu button.danger:hover {
+    background: #F0DCD3;
+}
+
+.item-menu button.confirm {
+    background: #DDAFA3;
+    border-color: #A66D60;
+    color: #803F36;
 }
 
 .chat-name {
@@ -384,10 +438,7 @@ canvas {
     text-decoration: underline;
 }
 
-.item-menu button:hover { background: #fef4ff; }
-.item-menu button.danger { border-color: #af647b; color: #853448; }
-.item-menu button.confirm { background: #ffe2dd; }
-
+/* player profile */
 #playerProfile {
     position: fixed;
     top: 50%;
@@ -395,11 +446,12 @@ canvas {
     transform: translate(-50%, -50%);
     width: 280px;
     padding: 20px;
-    background: #eee6fa;
-    border: 3px solid #927bb5;
+    background: var(--cream);
+    border: 3px solid var(--dark-olive);
     border-radius: 10px;
-    color: #45365c;
+    color: var(--dark-olive);
     text-align: center;
+    box-shadow: 5px 5px 0 var(--dark-shadow);
     z-index: 9999;
 }
 
@@ -407,16 +459,25 @@ canvas {
     display: block;
     margin: 8px auto;
     cursor: pointer;
+    background: var(--sage);
+    border: 2px solid var(--olive);
+    color: var(--dark-olive);
+    padding: 8px 12px;
 }
 
-#closeProfile {
+#playerProfile button:hover {
+    background: var(--olive);
+    color: var(--cream);
+}
+
+#playerProfile #closeProfile {
     position: absolute;
     top: 0;
     right: 10px;
-}
-
-.chat-name {
-    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: var(--dark-olive);
+    font-size: 22px;
 }
 
 #gameContainer {
@@ -424,6 +485,7 @@ canvas {
     inset: 0;
 }
 
+/* crafting button */
 #crafting-button {
     position: fixed;
     left: calc(50% + 316px);
@@ -431,10 +493,17 @@ canvas {
     width: 64px;
     height: 64px;
     z-index: 11;
-    background-color: rgba(100, 70, 140, 0.5);
-    border: 1px solid #250E34;
-    color: #D9FDA6;
+    background: var(--olive);
+    border: 2px solid var(--dark-olive);
+    border-radius: 5px 2px 5px 2px;
+    color: var(--cream);
+    box-shadow: 3px 3px 0 var(--dark-shadow);
     cursor: pointer;
+}
+
+#crafting-button:hover {
+    background: var(--sage);
+    color: var(--dark-olive);
 }
 
 #crafting-button span {
@@ -463,7 +532,7 @@ canvas {
     align-items: center;
     justify-content: center;
     padding: 14px;
-    background: rgba(23, 13, 32, 0.72);
+    background: rgba(48, 55, 34, 0.72);
     font: 600 14px/1.4 ui-monospace, Menlo, Consolas, monospace;
 }
 
@@ -475,11 +544,13 @@ canvas {
     min-height: min(430px, calc(100vh - 28px));
     overflow-y: auto;
     padding: 16px;
-    border: 4px solid #674d80;
+    border: 4px solid var(--dark-olive);
     border-radius: 16px 6px 16px 6px;
-    background: #d9c6ec;
-    color: #352443;
-    box-shadow: 6px 6px 0 #24162f, inset 0 0 0 2px #f4eaff;
+    background: var(--cream);
+    color: var(--dark-olive);
+    box-shadow:
+        6px 6px 0 var(--dark-shadow),
+        inset 0 0 0 2px var(--sage);
 }
 
 .crafting-heading {
@@ -490,52 +561,83 @@ canvas {
     margin-bottom: 14px;
     padding: 10px 12px;
     border-radius: 8px 3px 8px 3px;
-    background: #604474;
-    color: #fff5dd;
+    background: var(--olive);
+    color: var(--cream);
     font-size: 19px;
     font-weight: 800;
 }
 
-.crafting-heading-left { display: flex; gap: 10px; align-items: center; min-width: 0; }
-#crafting-title { overflow-wrap: anywhere; }
+.crafting-heading-left {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+}
+
+#crafting-title {
+    overflow-wrap: anywhere;
+}
 
 .crafting-back, .crafting-close {
     flex-shrink: 0;
-    border: 2px solid #bda6d0;
-    background: #eee1f8;
-    color: #42334f;
+    border: 2px solid var(--dark-olive);
+    background: var(--cream);
+    color: var(--dark-olive);
     font: inherit;
     font-size: 14px;
     cursor: pointer;
     padding: 3px 9px;
 }
-.crafting-back:hover, .crafting-close:hover { background: #fff5ff; }
-.crafting-back:focus-visible, .crafting-close:focus-visible,
-.crafting-recipe:focus-visible, .crafting-search:focus-visible,
-.crafting-make:focus-visible { outline: 3px solid #8055a8; outline-offset: 2px; }
+
+.crafting-back:hover, .crafting-close:hover {
+    background: var(--sage);
+}
+
+.crafting-back:focus-visible,
+.crafting-close:focus-visible,
+.crafting-recipe:focus-visible,
+.crafting-search:focus-visible,
+.crafting-make:focus-visible {
+    outline: 3px solid var(--olive);
+    outline-offset: 2px;
+}
 
 .crafting-hint {
     margin: 8px 2px 12px;
-    color: #685576;
+    color: var(--olive);
     font-size: 12px;
 }
 
+/* crafting search */
 .crafting-search {
     width: 100%;
     min-height: 44px;
     padding: 10px 12px;
-    background: #f8f0ff;
-    color: #352443;
-    border: 2px solid #9476b0;
+    margin-bottom: 12px;
+    background: var(--light-cream);
+    color: var(--dark-olive);
+    border: 2px solid var(--sage);
     border-radius: 7px 3px 7px 3px;
     font: inherit;
     font-size: 14px;
     outline: none;
 }
-.crafting-search::placeholder { color: #867494; }
-.crafting-search:focus { border-color: #694783; background: #fffaff; }
 
-.crafting-recipes { display: grid; gap: 9px; }
+.crafting-search::placeholder {
+    color: var(--olive);
+}
+
+.crafting-search:focus {
+    border-color: var(--dark-olive);
+    background: var(--light-cream);
+}
+
+/* crafting recipes */
+.crafting-recipes {
+    display: grid;
+    gap: 9px;
+}
+
 .crafting-recipe {
     display: flex;
     align-items: center;
@@ -543,14 +645,19 @@ canvas {
     width: 100%;
     text-align: left;
     padding: 10px;
-    border: 2px solid #aa91c3;
+    border: 2px solid var(--sage);
     border-radius: 10px 4px 10px 4px;
-    background: #f2eafb;
-    color: #352443;
+    background: var(--light-cream);
+    color: var(--dark-olive);
     font: inherit;
     cursor: pointer;
 }
-.crafting-recipe:hover { background: #fff8ff; border-color: #835ba3; }
+
+.crafting-recipe:hover {
+    background: var(--cream);
+    border-color: var(--olive);
+}
+
 .crafting-recipe-icon, .crafting-result-icon {
     flex-shrink: 0;
     display: grid;
@@ -558,50 +665,93 @@ canvas {
     width: 54px;
     height: 54px;
     padding: 5px;
-    border: 2px solid #9476b0;
+    border: 2px solid var(--olive);
     border-radius: 6px 2px 6px 2px;
-    background: #e3d1f2;
+    background: var(--sage);
 }
-.crafting-recipe-name { font-weight: 900; font-size: 14px; }
-.crafting-recipe-info { margin-top: 3px; font-size: 11px; color: #685576; }
-.crafting-recipe-arrow { margin-left: auto; font-size: 25px; color: #806196; }
-.crafting-empty { text-align: center; color: #685576; margin: 38px 0; }
 
-.crafting-details { display: flex; flex: 1; flex-direction: column; min-height: 290px; }
+.crafting-recipe-name {
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.crafting-recipe-info {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--olive);
+}
+
+.crafting-recipe-arrow {
+    margin-left: auto;
+    font-size: 25px;
+    color: var(--olive);
+}
+
+.crafting-empty {
+    text-align: center;
+    color: var(--olive);
+    margin: 38px 0;
+}
+
+/* crafting details */
+.crafting-details {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 290px;
+}
+
 .crafting-result {
     display: flex;
     align-items: center;
     gap: 13px;
     padding: 12px;
-    background: #f2eafb;
-    border: 2px solid #aa91c3;
+    background: var(--light-cream);
+    border: 2px solid var(--sage);
     border-radius: 9px 3px 9px 3px;
 }
-.crafting-result-icon { width: 68px; height: 68px; }
-.crafting-result-name { font-size: 18px; font-weight: 900; }
-.crafting-result-count { font-size: 12px; color: #685576; }
+
+.crafting-result-icon {
+    width: 68px;
+    height: 68px;
+}
+
+.crafting-result-name {
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.crafting-result-count {
+    font-size: 12px;
+    color: var(--olive);
+}
+
 .crafting-subheading {
     margin: 18px 2px 10px;
     font-size: 13px;
     font-weight: 900;
-    color: #5d4074;
+    color: var(--dark-olive);
     letter-spacing: 0.35px;
 }
 
+/* crafting materials */
 .crafting-materials {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 14px;
 }
+
 .crafting-material {
     min-width: 0;
     padding: 10px 5px 8px;
-    background: #f2eafb;
-    border: 2px solid #aa91c3;
+    background: var(--light-cream);
+    border: 2px solid var(--sage);
     border-radius: 8px 3px 8px 3px;
+    color: var(--dark-olive);
     text-align: center;
 }
+
 .crafting-material-icon {
     width: 58px;
     height: 58px;
@@ -609,93 +759,203 @@ canvas {
     display: grid;
     place-items: center;
 }
-.crafting-material.missing .crafting-material-icon { filter: grayscale(1) saturate(0); }
-.crafting-material-name { font-weight: 900; font-size: 12px; overflow-wrap: anywhere; }
-.crafting-material-quantity { font-size: 11px; margin-top: 3px; color: #34673c; }
-.crafting-material.missing .crafting-material-quantity { color: #a14254; }
-.crafting-free { color: #685576; text-align: center; grid-column: 1 / -1; padding: 20px; }
-.crafting-status { min-height: 20px; margin: auto 2px 9px; color: #685576; font-size: 12px; text-align: center; }
-.crafting-status.unavailable { color: #864e60; }
 
-/* matches the chat send button when crafting is possible */
+.crafting-material.missing {
+    background: #DDDDD3;
+    border-color: #ADADA3;
+}
+
+.crafting-material.missing .crafting-material-icon {
+    filter: grayscale(1) saturate(0);
+}
+
+.crafting-material-name {
+    font-weight: 900;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.crafting-material-quantity {
+    font-size: 11px;
+    margin-top: 3px;
+    color: var(--olive);
+}
+
+.crafting-material.missing .crafting-material-quantity {
+    color: #A14254;
+}
+
+.crafting-free {
+    color: var(--olive);
+    text-align: center;
+    grid-column: 1 / -1;
+    padding: 20px;
+}
+
+.crafting-status {
+    min-height: 20px;
+    margin: auto 2px 9px;
+    color: var(--olive);
+    font-size: 12px;
+    text-align: center;
+}
+
+.crafting-status.unavailable {
+    color: #A14254;
+}
+
+/* craft button */
 .crafting-make {
     display: block;
     width: 100%;
     min-height: 54px;
     padding: 12px 20px;
-    border: 1px solid #d6aaf2;
+    border: 2px solid var(--sage);
     border-radius: 5px 2px 5px 2px;
-    background: #8659aa;
-    color: white;
+    background: var(--olive);
+    color: var(--cream);
     font: inherit;
     font-size: 17px;
     font-weight: 800;
     cursor: pointer;
+    box-shadow: 0 3px 0 var(--dark-olive);
 }
-.crafting-make:hover:not(:disabled) { background: #a06bc9; }
+
+.crafting-make:hover:not(:disabled) {
+    background: var(--sage);
+    color: var(--dark-olive);
+}
+
+.crafting-make:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--dark-olive);
+}
+
 .crafting-make:disabled {
-    background: #dddddd;
+    background: #DDDDDD;
     border: 2px solid #909090;
     color: #000000;
     opacity: 1;
+    box-shadow: none;
     cursor: not-allowed;
 }
 
 @media (max-width: 430px) {
-    .crafting-panel { padding: 9px; }
-    .crafting-materials { gap: 5px; }
-    .crafting-material { padding: 8px 3px; }
-    .crafting-material-icon { width: 42px; height: 42px; }
-    .crafting-material-name { font-size: 11px; }
-    .crafting-heading { font-size: 16px; }
+    .crafting-panel {
+        padding: 9px;
+    }
+
+    .crafting-materials {
+        gap: 5px;
+    }
+
+    .crafting-material {
+        padding: 8px 3px;
+    }
+
+    .crafting-material-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .crafting-material-name {
+        font-size: 11px;
+    }
+
+    .crafting-heading {
+        font-size: 16px;
+    }
 }
 
-
+/* profile menu */
 #profileMenu {
     position: fixed;
     top: 16px;
     right: 16px;
     z-index: 10000;
     font: bold 13px ui-monospace, "Courier New", monospace;
-    color: #42334f;
+    color: var(--dark-olive);
 }
-#profileMenu [hidden] { display: none !important; }
+
+#profileMenu [hidden] {
+    display: none !important;
+}
+
 #profileMenu button {
     font: inherit;
     cursor: pointer;
-    border: 2px solid #624680;
+    border: 2px solid var(--dark-olive);
     border-radius: 0;
 }
+
 #profileButton {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #eee1f8;
-    color: #42334f;
+    background: var(--cream);
+    color: var(--dark-olive);
     padding: 9px 12px;
-    box-shadow: 0 3px 0 #624680;
+    box-shadow: 0 3px 0 var(--dark-olive);
 }
-#profileIcon { width: 19px; height: 19px; fill: currentColor; }
+
+#profileButton:hover {
+    background: var(--sage);
+}
+
+#profileIcon {
+    width: 19px;
+    height: 19px;
+    fill: currentColor;
+}
+
 #profileDropdown {
     position: absolute;
     top: calc(100% + 9px);
     right: 0;
     min-width: 180px;
     padding: 12px;
-    border: 2px solid #624680;
-    box-shadow: 0 3px 0 #624680;
-    background: #fbf6ff;
+    border: 2px solid var(--dark-olive);
+    box-shadow: 0 3px 0 var(--dark-olive);
+    background: var(--cream);
 }
-#profileUsername { display: block; margin-bottom: 11px; overflow-wrap: anywhere; }
+
+#profileUsername {
+    display: block;
+    margin-bottom: 11px;
+    overflow-wrap: anywhere;
+}
+
 #logoutButton {
-    width: 100%; padding: 8px; background: #e6c9d5; color: #753b55;
-    border-color: #a76581 !important;
+    width: 100%;
+    padding: 8px;
+    background: var(--sage);
+    color: var(--dark-olive);
+    border-color: var(--olive) !important;
 }
-#logoutButton:hover:not(:disabled) { background: #dcb3c6; }
-#profileMenu button:focus-visible { outline: 3px solid #a989d0; outline-offset: 2px; }
-#profileMenu button:disabled { opacity: .6; cursor: wait; }
-#profileError { font-size: 11px; margin: 8px 0 0; }
-#profileError:empty { display: none; }
+
+#logoutButton:hover:not(:disabled) {
+    background: var(--olive);
+    color: var(--cream);
+}
+
+#profileMenu button:focus-visible {
+    outline: 3px solid var(--sage);
+    outline-offset: 2px;
+}
+
+#profileMenu button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+#profileError {
+    font-size: 11px;
+    margin: 8px 0 0;
+}
+
+#profileError:empty {
+    display: none;
+}
 
 /* chat */
 #chat {
@@ -707,83 +967,164 @@ canvas {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: rgba(36, 24, 54, 0.88);
-    border: 2px solid #9473b3;
+    background: rgba(72, 81, 52, 0.90);
+    border: 2px solid var(--sage);
     border-radius: 12px 5px 12px 5px;
-    box-shadow: 4px 5px 0 rgba(25, 14, 37, 0.5), inset 0 1px 0 #b89bcf;
-    color: #f8edff;
+    box-shadow:
+        4px 5px 0 rgba(48, 55, 34, 0.50),
+        inset 0 1px 0 var(--sage);
+    color: var(--cream);
     font: 600 13px/1.45 ui-monospace, Menlo, Consolas, monospace;
     z-index: 12;
     pointer-events: none;
 }
-#chat:focus-within { border-color: #e0b8ff; background: rgba(36, 24, 54, 0.96); }
+
+#chat:focus-within {
+    border-color: var(--cream);
+    background: rgba(72, 81, 52, 0.98);
+}
+
 #chat-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 9px 12px;
-    background: rgba(105, 68, 137, 0.6);
-    border-bottom: 1px solid #9473b3;
+    background: var(--olive);
+    border-bottom: 1px solid var(--sage);
+    color: var(--cream);
     font-size: 13px;
     letter-spacing: 0.4px;
 }
-#chat-hint { font-size: 10px; color: #cdb4de; font-weight: 500; }
+
+#chat-hint {
+    font-size: 10px;
+    color: var(--cream);
+    opacity: 0.75;
+    font-weight: 500;
+}
+
 #chat-messages {
     flex: 1;
     min-height: 0;
     padding: 10px 12px;
     overflow-y: auto;
     overflow-wrap: anywhere;
-    scrollbar-color: #8f6baa transparent;
+    scrollbar-color: var(--sage) transparent;
     scrollbar-width: thin;
     pointer-events: auto;
 }
-.chat-message { margin: 0 0 7px; }
-.chat-message .chat-name { color: #f4d49a; }
-.chat-message.system { color: #bfa9d2; font-style: italic; font-weight: 500; }
+
+.chat-message {
+    margin: 0 0 7px;
+}
+
+.chat-message .chat-name {
+    color: #D8DDBB;
+}
+
+.chat-message.system {
+    color: var(--sage);
+    font-style: italic;
+    font-weight: 500;
+}
+
 #chatbox {
     display: flex;
     gap: 7px;
     padding: 9px;
-    background: #21152f;
-    border-top: 1px solid #72548b;
+    background: var(--dark-olive);
+    border-top: 1px solid var(--olive);
     pointer-events: auto;
 }
+
 #chat-input {
     flex: 1;
     min-width: 0;
     padding: 9px 10px;
-    background: #39274d;
-    border: 1px solid #82629e;
+    background: var(--cream);
+    border: 1px solid var(--sage);
     border-radius: 6px 2px 6px 2px;
-    color: #fff5ff;
+    color: var(--dark-olive);
     outline: none;
     font: inherit;
 }
-#chat-input::placeholder { color: #b49bc7; }
-#chat-input:focus { border-color: #e0b8ff; background: #48305e; }
+
+#chat-input::placeholder {
+    color: var(--olive);
+}
+
+#chat-input:focus {
+    border-color: var(--sage);
+    background: var(--light-cream);
+}
+
 #chat-send {
     padding: 0 12px;
-    border: 1px solid #d6aaf2;
+    border: 2px solid var(--sage);
     border-radius: 5px 2px 5px 2px;
-    background: #8659aa;
-    color: white;
+    background: var(--olive);
+    color: var(--cream);
     font: inherit;
     font-weight: 800;
     cursor: pointer;
 }
-#chat-send:hover:not(:disabled) { background: #a06bc9; }
-#chat-send:disabled { opacity: 0.55; cursor: default; }
 
+#chat-send:hover:not(:disabled) {
+    background: var(--sage);
+    color: var(--dark-olive);
+}
+
+#chat-send:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+/* scrollbars */
+.inventory-panel,
+.crafting-panel {
+    scrollbar-color: var(--olive) var(--cream);
+    scrollbar-width: thin;
+}
+
+::selection {
+    background: var(--olive);
+    color: var(--cream);
+}
+
+/* smaller screens */
 @media (max-width: 390px) {
-    .inventory-grid { gap: 3px; padding: 5px; }
-    .inventory-panel { padding: 9px; }
-    .inventory-heading { font-size: 15px; }
-    .inventory-heading small { font-size: 10px; }
-    .inventory-slot { border-width: 1px; }
-    .item-quantity { font-size: 10px; }
-    .hotbar-slot .item-quantity { font-size: 10px; }
-    .hotbar-number { font-size: 8px; }
+    .inventory-grid {
+        gap: 3px;
+        padding: 5px;
+    }
+
+    .inventory-panel {
+        padding: 9px;
+    }
+
+    .inventory-heading {
+        font-size: 15px;
+    }
+
+    .inventory-heading small {
+        font-size: 10px;
+    }
+
+    .inventory-slot {
+        border-width: 1px;
+    }
+
+    .item-quantity {
+        font-size: 10px;
+    }
+
+    .hotbar-slot .item-quantity {
+        font-size: 10px;
+    }
+
+    .hotbar-number {
+        font-size: 8px;
+    }
 }
 </style>
 </head>
