@@ -2605,6 +2605,8 @@ const maleRunningLeft2 = loadImage(
     "characters/male/male-left-running-2.png"
 );
 
+const rockPile1 = loadImage("objects/rocks.png");
+
 const maleAxeCrafted = loadImage("characters/male/male-crafted-axe.png");
 
 // sprite groups
@@ -3033,6 +3035,8 @@ async function holdToCutTree(tree) {
     }
 }
 
+
+
 const CRAFT_FRAME_COUNT = 32;
 const CRAFT_FPS = 25;
 const CRAFT_DURATION = (CRAFT_FRAME_COUNT / CRAFT_FPS) * 1000;    
@@ -3145,16 +3149,16 @@ function canMoveTo(x, y) {
 
     return !(
         isPositionSolid(x - halfW, y - halfH) ||
-        isTreeSolid(x - halfW, y - halfH) ||
+        (isTreeSolid(x - halfW, y - halfH) || isRockSolid(x - halfW, y - halfH)) ||
 
         isPositionSolid(x + halfW, y - halfH) ||
-        isTreeSolid(x + halfW, y - halfH) ||
+        (isTreeSolid(x + halfW, y - halfH) || isRockSolid(x + halfW, y - halfH)) ||
 
         isPositionSolid(x - halfW, y + halfH) ||
-        isTreeSolid(x - halfW, y + halfH) ||
+        (isTreeSolid(x - halfW, y + halfH) || isRockSolid(x - halfW, y + halfH)) ||
 
         isPositionSolid(x + halfW, y + halfH) ||
-        isTreeSolid(x + halfW, y + halfH)
+        (isTreeSolid(x + halfW, y + halfH) || isRockSolid(x + halfW, y + halfH))
     );
 }
 // rare ground eggs
@@ -3678,10 +3682,20 @@ function draw() {
         cameraY + canvas.height + TREE_SIZE
     );
 
-    for (const tree of trees) {
-        if (tree.y <= player.y) {
-            drawTree(tree, cameraX, cameraY);
-        }
+    const rocks = getRocksInBounds(
+        cameraX - ROCK_SIZE,
+        cameraY - ROCK_SIZE,
+        cameraX + canvas.width + ROCK_SIZE,
+        cameraY + canvas.height + ROCK_SIZE
+    );
+
+    const objects = [
+        ...trees.map(tree => ({ y: tree.y, draw: () => drawTree(tree, cameraX, cameraY) })),
+        ...rocks.map(rock => ({ y: rock.y, draw: () => drawRock(rock, cameraX, cameraY) }))
+    ].sort((a, b) => a.y - b.y);
+
+    for (const object of objects) {
+        if (object.y <= player.y) object.draw();
     }
 
     drawPlayer(
@@ -3689,10 +3703,8 @@ function draw() {
         Math.floor(canvas.height / 2)
     );
 
-    for (const tree of trees) {
-        if (tree.y > player.y) {
-            drawTree(tree, cameraX, cameraY);
-        }
+    for (const object of objects) {
+        if (object.y > player.y) object.draw();
     }
 
     drawHitboxes(cameraX, cameraY);
@@ -3714,6 +3726,253 @@ function gameLoop(now) {
     requestAnimationFrame(gameLoop);
 }
 
+
+
+
+// rock settings
+const ROCK_CELL_TILES = 8;
+const ROCK_CHANCE_PERCENT = 25;
+const ROCK_SIZE = 32;
+const ROCK_HALF_WIDTH = 12;
+const ROCK_DEPTH = 10;
+const ROCK_INTERACTION_DISTANCE = 30;
+
+const rockCache = new Map();
+
+
+
+
+
+// rocks
+function getRockInCell(cx, cy) {
+    const key = `${cx},${cy}`;
+
+    if (rockCache.has(key)) {
+        return rockCache.get(key);
+    }
+
+    const seed = hash(cx + 58321, cy - 47319);
+
+    if (seed % 100 >= ROCK_CHANCE_PERCENT) {
+        rockCache.set(key, null);
+        return null;
+    }
+
+    const tx =
+        cx * ROCK_CELL_TILES + 1 +
+        (hash(cx + 831, cy + 2193) % (ROCK_CELL_TILES - 2));
+
+    const ty =
+        cy * ROCK_CELL_TILES + 1 +
+        (hash(cx - 1391, cy + 3291) % (ROCK_CELL_TILES - 2));
+
+    const x = tx * TILE_SIZE + TILE_SIZE / 2;
+    const y = ty * TILE_SIZE + TILE_SIZE / 2;
+
+    if (isNearPlot(x, y, ROCK_SIZE / 2 + 6)) {
+        rockCache.set(key, null);
+        return null;
+    }
+
+    if (Math.hypot(x + 16, y + 16) < 48) {
+        rockCache.set(key, null);
+        return null;
+    }
+
+    // prevent rocks from spawning inside trees
+    const nearbyTrees = [];
+    const treeCellSize = TREE_CELL_TILES * TILE_SIZE;
+    for (let ty = Math.floor((y - 32) / treeCellSize); ty <= Math.floor((y + 32) / treeCellSize); ty++) {
+        for (let tx = Math.floor((x - 32) / treeCellSize); tx <= Math.floor((x + 32) / treeCellSize); tx++) {
+            if (hash(tx + 17031, ty - 90217) % 100 >= TREE_CHANCE_PERCENT) continue;
+            const treeX = (tx * TREE_CELL_TILES + 1 + hash(tx + 317, ty + 991) % (TREE_CELL_TILES - 2)) * TILE_SIZE + TILE_SIZE / 2;
+            const treeY = (ty * TREE_CELL_TILES + 1 + hash(tx - 733, ty + 1441) % (TREE_CELL_TILES - 2)) * TILE_SIZE + TILE_SIZE / 2;
+            if (isNearPlot(treeX, treeY, TREE_SIZE / 2 + 6) || Math.hypot(treeX + 16, treeY + 16) < 48) continue;
+            nearbyTrees.push({ x: treeX, y: treeY });
+        }
+    }
+
+    for (const tree of nearbyTrees) {
+        if (Math.hypot(x - tree.x, y - tree.y) < 32) {
+            rockCache.set(key, null);
+            return null;
+        }
+    }
+
+    const rock = {
+        key,
+        cx,
+        cy,
+        x,
+        y,
+        mining: false,
+        mineDamage: 0,
+        mineStage: 0,
+        animation: null,
+        shakeStartedAt: null
+    };
+
+    rockCache.set(key, rock);
+
+    return rock;
+}
+
+function getRocksInBounds(left, top, right, bottom) {
+    const cellSize = ROCK_CELL_TILES * TILE_SIZE;
+    const rocks = [];
+
+    for (
+        let cy = Math.floor(top / cellSize);
+        cy <= Math.floor(bottom / cellSize);
+        cy++
+    ) {
+        for (
+            let cx = Math.floor(left / cellSize);
+            cx <= Math.floor(right / cellSize);
+            cx++
+        ) {
+            const rock = getRockInCell(cx, cy);
+
+            if (
+                rock &&
+                rock.x >= left &&
+                rock.x <= right &&
+                rock.y >= top &&
+                rock.y <= bottom
+            ) {
+                rocks.push(rock);
+            }
+        }
+    }
+
+    return rocks;
+}
+
+// rock collision
+function isRockSolid(x, y) {
+    const cellSize = ROCK_CELL_TILES * TILE_SIZE;
+    const cx = Math.floor(x / cellSize);
+    const cy = Math.floor(y / cellSize);
+
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            const rock = getRockInCell(cx + dx, cy + dy);
+
+            if (!rock) continue;
+
+            if (
+                Math.abs(x - rock.x) <= ROCK_HALF_WIDTH &&
+                y >= rock.y - ROCK_DEPTH &&
+                y <= rock.y
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// find nearest rock
+function getNearestRock() {
+    let nearest = null;
+
+    let nearestDistanceSq =
+        ROCK_INTERACTION_DISTANCE * ROCK_INTERACTION_DISTANCE;
+
+    const rocks = getRocksInBounds(
+        player.x - ROCK_INTERACTION_DISTANCE,
+        player.y - ROCK_INTERACTION_DISTANCE,
+        player.x + ROCK_INTERACTION_DISTANCE,
+        player.y + ROCK_INTERACTION_DISTANCE
+    );
+
+    for (const rock of rocks) {
+        const dx = rock.x - player.x;
+        const dy = rock.y - player.y;
+
+        const distanceSq = dx * dx + dy * dy;
+
+        if (distanceSq <= nearestDistanceSq) {
+            nearest = rock;
+            nearestDistanceSq = distanceSq;
+        }
+    }
+
+    return nearest;
+}
+
+// shake rock
+function shakeRock(rock) {
+    if (!rock) return;
+
+    rock.shakeStartedAt = performance.now();
+}
+
+// draw rock
+function drawRock(rock, cameraX, cameraY) {
+    const x = Math.round(rock.x - cameraX);
+    const y = Math.round(rock.y - cameraY);
+
+    const texture = rockPile1;
+
+    if (!imageReady(texture)) return;
+
+    // shadow
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+    ctx.beginPath();
+    ctx.ellipse(
+        x,
+        y - 4,
+        ROCK_SIZE * 0.38,
+        ROCK_SIZE * 0.16,
+        0,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+    ctx.restore();
+
+    // shake animation
+    let shakeX = 0;
+
+    if (rock.shakeStartedAt != null) {
+        const elapsed =
+            (performance.now() - rock.shakeStartedAt) / 1000;
+
+        if (elapsed < 0.5) {
+            shakeX =
+                Math.sin(elapsed * Math.PI * 20) *
+                2 *
+                (1 - elapsed / 0.5);
+        } else {
+            rock.shakeStartedAt = null;
+        }
+    }
+
+    ctx.save();
+    ctx.translate(x + shakeX, y);
+
+    ctx.drawImage(
+        texture,
+        -ROCK_SIZE / 2,
+        -ROCK_SIZE,
+        ROCK_SIZE,
+        ROCK_SIZE
+    );
+
+    ctx.restore();
+}
+
+
+
+
+
+
+
+
+    
 requestAnimationFrame(gameLoop);
 // controls
 window.addEventListener("keydown", (event) => {
@@ -3907,6 +4166,23 @@ function drawHitboxes(cameraX, cameraY) {
             Math.round(tree.y - TREE_TRUNK_DEPTH - cameraY),
             TREE_TRUNK_HALF_WIDTH * 2,
             TREE_TRUNK_DEPTH
+        );
+    }
+
+    const rocks = getRocksInBounds(
+        cameraX - ROCK_SIZE,
+        cameraY - ROCK_SIZE,
+        cameraX + canvas.width + ROCK_SIZE,
+        cameraY + canvas.height + ROCK_SIZE
+    );
+
+    ctx.strokeStyle = "#ffaa00";
+    for (const rock of rocks) {
+        ctx.strokeRect(
+            Math.round(rock.x - ROCK_HALF_WIDTH - cameraX),
+            Math.round(rock.y - ROCK_DEPTH - cameraY),
+            ROCK_HALF_WIDTH * 2,
+            ROCK_DEPTH
         );
     }
 
